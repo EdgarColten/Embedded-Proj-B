@@ -16,9 +16,20 @@
 //
 //
 ///////////////////////////////////////////
+#include <cstdint>
+#include "main.h"
+#include "stm32l4xx_hal.h"
+#include "Queue.h"
+#include "OutputDriver.h"
+
+
 extern "C" void cpp_main(void);
 
 
 void cpp_main(){
 
+	while(1)
+	{
+
+	}
 }
