@@ -21,6 +21,9 @@ private:
 	Queue* queue;
 	uint32_t freq;
 	uint32_t amp;
+	uint32_t step;
+	uint32_t DAC_OUT;
+	uint8_t direction;
 	enum shape {sine,square,pulse,delay}shape; //delay is only for channel 2
 
 public:
@@ -28,6 +31,7 @@ public:
 	void update();
 	void update_Channel1();
 	void update_Channel2();
+	void setStep(uint32_t);
 
 };
 

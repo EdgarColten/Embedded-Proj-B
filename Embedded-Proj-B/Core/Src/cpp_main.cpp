@@ -25,11 +25,28 @@
 
 extern "C" void cpp_main(void);
 
+extern DAC_HandleTypeDef hdac1;
 
 void cpp_main(){
 
+	OutputDriver dac;
+	//uint32_t DAC_OUT = 0;
+	//uint8_t direction = 0;
+	HAL_DAC_Start(&hdac1, DAC_CHANNEL_1);
+
+	//float val = 0;
+
+	//DAC_OUT = val*(4096)/3.3;
+	//TIM2->PSC = 3;
+	//dac.update_Channel1();
 	while(1)
 	{
+		//HAL_DAC_SetValue(&hdac1, DAC1_CHANNEL_1, DAC_ALIGN_12B_R, 2047);
+
+		dac.update_Channel1();
+
+		HAL_Delay(1);
+
 
 	}
 }
