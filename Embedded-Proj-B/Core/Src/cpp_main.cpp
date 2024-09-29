@@ -32,16 +32,8 @@ extern TIM_HandleTypeDef htim2;
 
 void cpp_main(){
 
-	OutputDriver dac;
-	//uint32_t DAC_OUT = 0;
-	//uint8_t direction = 0;
-	//HAL_DAC_Start(&hdac1, DAC_CHANNEL_1);
+	OutputDriver dac1;
 
-	//float val = 0;
-
-	//DAC_OUT = val*(4096)/3.3;
-
-	//dac.update_Channel1();
 
 	uint32_t count = 0;
 
@@ -49,7 +41,7 @@ void cpp_main(){
 	{
 		//HAL_DAC_SetValue(&hdac1, DAC1_CHANNEL_1, DAC_ALIGN_12B_R, 2047);
 
-		dac.update_Channel1(100,1);
+		dac1.update_Channel(100,1);
 		//count++;
 /*
 		if(count == 1000)

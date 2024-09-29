@@ -41,7 +41,7 @@ OutputDriver::OutputDriver()
 
 
 
-void OutputDriver::update_Channel1(uint32_t newFreq, uint32_t newAmp)
+void OutputDriver::update_Channel(uint32_t newFreq, uint32_t newAmp)
 {
 
 	if(shape == sine)
@@ -84,19 +84,20 @@ void OutputDriver::update_Channel1(uint32_t newFreq, uint32_t newAmp)
 
 
 	}
-/*
+
 	else if(shape == pulse)
 	{
 
 	}
-*/
+
+	else if(shape == delay)
+	{
+
+	}
+
 	return;
 }
 
-void OutputDriver::update_Channel2()
-{
-	//HAL_DAC_SetValue(&hdac1, DAC1_CHANNEL_2, DAC_ALIGN_12B_R, DAC_OUT);
-}
 
 
 void OutputDriver::generateSine(uint32_t* sineWave,uint16_t size)

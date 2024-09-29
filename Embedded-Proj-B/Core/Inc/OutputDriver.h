@@ -26,8 +26,7 @@ private:
 public:
 	OutputDriver();
 	void update();
-	void update_Channel1(uint32_t, uint32_t);
-	void update_Channel2();
+	void update_Channel(uint32_t, uint32_t);
 	void generateSquare(uint32_t*,uint16_t);
 	void generateSine(uint32_t*,uint16_t);
 
