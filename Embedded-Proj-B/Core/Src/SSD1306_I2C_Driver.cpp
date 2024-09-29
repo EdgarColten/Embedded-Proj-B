@@ -442,8 +442,7 @@ void OLED::updateDisplay(Queue* values)
 	uint32_t lowerAddress = 0;
     uint32_t upperData = 0;
 	uint32_t lowerData = 0;
-	uint8_t upperCode = 0;
-	uint8_t lowerCode = 0;
+
 
 
 	bool notEmpty = values->dequeue(&displayValue);

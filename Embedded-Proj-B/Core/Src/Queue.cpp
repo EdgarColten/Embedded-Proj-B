@@ -11,74 +11,49 @@
 
 
 
-Queue::Queue(void)
-{
-		tail = 0;
-		for(int32_t i = 0; i < Q_SIZE; i++)
-		{
-			buffer[i] = 0;
-		}
-	}
-
-bool Queue::enqueue(int32_t msg)//adds msg to the queue at the indicated index by tail. Returns true if successful and false if buffer is full.
-{
-	if (tail >= Q_SIZE)
-	{
-		return false;
-	}
-
-	else
-	{
-		buffer[tail] = msg;
-		tail++;
-		return true;
-	}
+Queue::Queue(){
+    // q_load = 0 via "attribute = 0" style
 }
 
-bool Queue::dequeue(int32_t *msg) //removes message at index 0 and shifts everything left (forward) and writes the removed message to *msg. Returns true if successful and false if if the queue is empty.
-{
-	tail--;
+bool Queue::enqueue(int32_t msg){ //works with the tail
+    bool ok = false;
+    if ((tail == BUFFER_END && head == 0) || (tail + 1) == head){ //This means that the buffer will be "empty" and we will be unable to dequeue
+        ok = false;
+    }
+    else{
+        buffer[tail] = msg;
 
-	if(tail < 0)
-	{
-		tail++;
-		return false;
-	}
+        if(tail == BUFFER_END){
+            tail = 0;
+        }
+        else
+            tail++;
 
-	else
-	{
-		*msg = buffer[0];
+        ok = true;
+    }
+    return ok;
+}
 
-		for(int32_t i = 1; i < Q_SIZE; i++){buffer[i - 1] = buffer[i];}
+bool Queue::dequeue(int32_t *msg){ //works with the head
+    bool ok = false;
+    if (head == tail) {
+        ok = false;
+    }
+    else{
+        *msg = buffer[head];
+        /*for (uint16_t n = 0; n<q_load; n++){
+            buffer[n] = buffer[n+1];
+        }*/
+        buffer[head] = 0;
 
-		buffer[Q_SIZE - 1] = 0;
-
-		return true;
-	}
+        if(head == (BUFFER_END))
+            head = 0;
+        else
+            head++;
+        ok=true;
+    }
+    return ok;
 }
 
 
-bool queueTestCase()
-{
-	Queue line;
-	bool decision[100];
-	uint32_t outsideBoundary;
 
-	for(uint32_t i = 0; i < 13; i++)
-	{
-		decision[i] = line.enqueue(i);
-		if(decision[i] == false && decision[i-1] == true)
-		{
-			outsideBoundary = i;
-		}
-	}
-
-	if(outsideBoundary == 0)
-	{
-		return true;
-	}
-
-	else
-		return false;
-
-}

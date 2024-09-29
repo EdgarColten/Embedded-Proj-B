@@ -11,46 +11,44 @@
 //
 // Current Clock config:
 // SysClk = 70 MHz
+//
+// Current Timer config:
 // tim2 enabled
 // Prescalar = 0
 // Auto Reload = 2731 (100 Hz)
 //
+// tim6 enabled
+// Prescalar = 0
+// Auto Reload = 2731 (100 Hz)
+//
 ///////////////////////////////////////////
+
 #include <cstdint>
 #include "main.h"
 #include "stm32l4xx_hal.h"
+
+//custom includes
+#include "cpp_main.h"
 #include "Queue.h"
 #include "OutputDriver.h"
 
 
 extern "C" void cpp_main(void);
 
-extern DAC_HandleTypeDef hdac1;
-extern TIM_HandleTypeDef htim2;
-
-
 
 void cpp_main(){
 
-	OutputDriver dac1;
+	OutputDriver Channel1 = OutputDriver(1);
+	OutputDriver Channel2 = OutputDriver(2);
 
+	//waveType choice = square;
+	//dac1.setShape(choice);
 
-	uint32_t count = 0;
 
 	while(1)
 	{
-		//HAL_DAC_SetValue(&hdac1, DAC1_CHANNEL_1, DAC_ALIGN_12B_R, 2047);
-
-		dac1.update_Channel(100,1);
-		//count++;
-/*
-		if(count == 1000)
-		{
-			//_HAL_TIM_SET_AUTORELOAD();
-			__HAL_TIM_SET_AUTORELOAD(&htim2,250);
-		}
-*/
-		//HAL_Delay(1);
+		Channel1.update_Channel(1000,2,sine);
+		Channel2.update_Channel(500, 1, sine);
 
 
 	}
