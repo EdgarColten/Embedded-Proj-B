@@ -31,15 +31,15 @@ extern TIM_HandleTypeDef htim6;
 
 
 
-OutputDriver::OutputDriver(uint8_t ch) // @suppress("Class members should be properly initialized")
+OutputDriver::OutputDriver(uint8_t chan) // @suppress("Class members should be properly initialized")
 {
-	freq = 100;
+	freq = 1;
 	amp = 1;
 	shape = sine;
 	autoReload = 2731;
-	channel = ch;
+	channel = chan;
 
-	//Generation check objects
+	//update_Channel(freq,amp,shape);	//Generation check objects
 	updateSine = false;
 	updateSquare = false;
 	updatePulse = false;
@@ -50,11 +50,19 @@ OutputDriver::OutputDriver(uint8_t ch) // @suppress("Class members should be pro
 void OutputDriver::setShape(wave chosenShape)
 {
 	shape = chosenShape;
+	return;
+}
+
+//setting the Auto Reload value
+void OutputDriver::setAutoReload(TIM_HandleTypeDef* timmer)
+{
+    (timmer)->Instance->ARR = (autoReload);
+    (timmer)->Init.Period = (autoReload);
+	return;
 }
 
 
-
-void OutputDriver::update_Channel(uint32_t newFreq, uint32_t newAmp, wave chosenShape)
+void OutputDriver::update_Channel(uint32_t newFreq, uint32_t newAmp, wave chosenShape) //TODO: take a struct opposed to individual values
 {
 	if(channel == 1)
 	{
@@ -67,10 +75,9 @@ void OutputDriver::update_Channel(uint32_t newFreq, uint32_t newAmp, wave chosen
 			uint32_t trig = 0;
 			trig = freq * SIZE;
 			autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
-		    (&htim2)->Instance->ARR = (autoReload);
-		    (&htim2)->Init.Period = (autoReload);
-			//uint32_t sineWave[SIZE];
-			generateSine();
+			setAutoReload(&htim2);
+			generateWave();
+
 			HAL_TIM_Base_Start(&htim2);
 			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, sineWave, SIZE, DAC_ALIGN_12B_R);
 			updateSine = true;
@@ -83,25 +90,24 @@ void OutputDriver::update_Channel(uint32_t newFreq, uint32_t newAmp, wave chosen
 				freq = newFreq;
 				trig = freq * SIZE;
 				autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
-				generateSine();
-				//__HAL_TIM_SET_AUTORELOAD(&htim2,autoReload);
-			    (&htim2)->Instance->ARR = (autoReload);
-			    (&htim2)->Init.Period = (autoReload);
+
+				setAutoReload(&htim2);
+				generateWave();
+
 			}
 		}
 
 		else if(shape == square && updateSquare == false)
 		{
-			//uint32_t squareWave[SIZE];
 			freq = newFreq;
 			amp = newAmp;
 			uint32_t trig = 0;
 			trig = freq * SIZE;
 			autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
-		    (&htim2)->Instance->ARR = (autoReload);
-		    (&htim2)->Init.Period = (autoReload);
+			setAutoReload(&htim2);
 
-			generateSquare();
+			generateWave();
+
 			HAL_TIM_Base_Start(&htim2);
 			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, squareWave, SIZE, DAC_ALIGN_12B_R);
 			updateSquare = true;
@@ -116,27 +122,26 @@ void OutputDriver::update_Channel(uint32_t newFreq, uint32_t newAmp, wave chosen
 				amp = newAmp;
 				trig = freq * SIZE;
 				autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
-				generateSquare();
-				//__HAL_TIM_SET_AUTORELOAD(&htim2,autoReload);
-			    (&htim2)->Instance->ARR = (autoReload);
-			    (&htim2)->Init.Period = (autoReload);
+
+				setAutoReload(&htim2);
+				generateWave();
+
 			}
 		}
 
 		else if(shape == pulse && updatePulse == false)
 		{
-			//uint32_t pulseWave[SIZE];
 			freq = newFreq;
 			amp = newAmp;
 			uint32_t trig = 0;
 			trig = freq * SIZE;
 			autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
-		    (&htim2)->Instance->ARR = (autoReload);
-		    (&htim2)->Init.Period = (autoReload);
+			setAutoReload(&htim2);
+			generateWave();
 
-			generatePulse();
 			HAL_TIM_Base_Start(&htim2);
 			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, pulseWave, SIZE, DAC_ALIGN_12B_R);
+			updatePulse = true;
 
 		}
 		else if(shape == pulse && updatePulse == true)
@@ -148,10 +153,8 @@ void OutputDriver::update_Channel(uint32_t newFreq, uint32_t newAmp, wave chosen
 				amp = newAmp;
 				trig = freq * SIZE;
 				autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
-				generatePulse();
-				//__HAL_TIM_SET_AUTORELOAD(&htim2,autoReload);
-			    (&htim2)->Instance->ARR = (autoReload);
-			    (&htim2)->Init.Period = (autoReload);
+				setAutoReload(&htim2);
+				generateWave();
 			}
 		}
 		return;
@@ -162,16 +165,15 @@ void OutputDriver::update_Channel(uint32_t newFreq, uint32_t newAmp, wave chosen
 
 		if(shape == sine && updateSine == false)
 		{
-			//uint32_t sineWave[SIZE];
 			freq = newFreq;
 			amp = newAmp;
 			uint32_t trig = 0;
 			trig = freq * SIZE;
 			autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
-		    (&htim6)->Instance->ARR = (autoReload);
-		    (&htim6)->Init.Period = (autoReload);
 
-			generateSine();
+			setAutoReload(&htim6);
+			generateWave();
+
 			HAL_TIM_Base_Start(&htim6);
 			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, sineWave, SIZE, DAC_ALIGN_12B_R);
 			updateSine = true;
@@ -184,25 +186,24 @@ void OutputDriver::update_Channel(uint32_t newFreq, uint32_t newAmp, wave chosen
 				freq = newFreq;
 				trig = freq * SIZE;
 				autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
-				generateSine();
-				//__HAL_TIM_SET_AUTORELOAD(&htim2,autoReload);
-			    (&htim6)->Instance->ARR = (autoReload);
-			    (&htim6)->Init.Period = (autoReload);
+				setAutoReload(&htim6);
+				generateWave();
+
+
 			}
 		}
 
 		else if(shape == square && updateSquare == false)
 		{
-			//uint32_t squareWave[SIZE];
 			freq = newFreq;
 			amp = newAmp;
 			uint32_t trig = 0;
 			trig = freq * SIZE;
 			autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
-		    (&htim6)->Instance->ARR = (autoReload);
-		    (&htim6)->Init.Period = (autoReload);
+			setAutoReload(&htim6);
 
-			generateSquare();
+			generateWave();
+
 			HAL_TIM_Base_Start(&htim6);
 			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, squareWave, SIZE, DAC_ALIGN_12B_R);
 			updateSquare = true;
@@ -217,27 +218,27 @@ void OutputDriver::update_Channel(uint32_t newFreq, uint32_t newAmp, wave chosen
 				amp = newAmp;
 				trig = freq * SIZE;
 				autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
-				generateSquare();
-				//__HAL_TIM_SET_AUTORELOAD(&htim2,autoReload);
-			    (&htim6)->Instance->ARR = (autoReload);
-			    (&htim6)->Init.Period = (autoReload);
+				setAutoReload(&htim6);
+				generateWave();
+
+
 			}
 		}
 
 		else if(shape == pulse && updatePulse == false)
 		{
-			//uint32_t pulseWave[SIZE];
 			freq = newFreq;
 			amp = newAmp;
 			uint32_t trig = 0;
 			trig = freq * SIZE;
 			autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
-		    (&htim6)->Instance->ARR = (autoReload);
-		    (&htim6)->Init.Period = (autoReload);
 
-			generatePulse();
+			setAutoReload(&htim6);
+			generateWave();
+
 			HAL_TIM_Base_Start(&htim6);
 			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, pulseWave, SIZE, DAC_ALIGN_12B_R);
+			updatePulse = true;
 
 		}
 		else if(shape == pulse && updatePulse == true)
@@ -249,22 +250,21 @@ void OutputDriver::update_Channel(uint32_t newFreq, uint32_t newAmp, wave chosen
 				amp = newAmp;
 				trig = freq * SIZE;
 				autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
-				generatePulse();
-				//__HAL_TIM_SET_AUTORELOAD(&htim2,autoReload);
-			    (&htim6)->Instance->ARR = (autoReload);
-			    (&htim6)->Init.Period = (autoReload);
+				setAutoReload(&htim6);
+				generateWave();
+
+
 			}
 		}
 
 		else if(shape == delay)
-		{/*
+		{
+			/*
 			//generateDelay();
 			HAL_TIM_Base_Start(&htim6);
 			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, pulseWave, SIZE, DAC_ALIGN_12B_R);
 			*/
 		}
-
-
 		return;
 	}
 	else
@@ -274,58 +274,57 @@ void OutputDriver::update_Channel(uint32_t newFreq, uint32_t newAmp, wave chosen
 
 //Wave generation
 
-void OutputDriver::generateSine()
+void OutputDriver::generateWave()
 {
-	uint32_t amplifier = amp * 1240;
-	for(uint32_t i = 0; i < SIZE; i++)
+	if(shape == sine)
 	{
-		sineWave[i] =  (sin(i*(2*PI)/SIZE) + 1) * (amplifier/2); //TODO:find a way to avoid division
-	}
-	return;
-
-}
-
-
-void OutputDriver::generateSquare()
-{
-	for(uint32_t i = 0; i < SIZE; i++)
-	{
-		if(i < SIZE/2) //TODO:find a way to avoid division
+		uint32_t amplifier = amp * 1240;
+		for(uint32_t i = 0; i < SIZE; i++)
 		{
-			squareWave[i] = 0;
+			sineWave[i] =  (sin(i*(2*PI)/SIZE) + 1) * (amplifier/2); //TODO:find a way to avoid division
 		}
-		else
+		return;
+	}
+
+	else if(shape == square)
+	{
+		for(uint32_t i = 0; i < SIZE; i++)
 		{
-			squareWave[i] = amp * 1215; //1215 = 1 volt
-			if(squareWave[i] > (MAX_SIZE - 1))
+			if(i < SIZE/2) //TODO:find a way to avoid division
 			{
-				squareWave[i] = (MAX_SIZE - 1);
+				squareWave[i] = 0;
 			}
+			else
+			{
+				squareWave[i] = amp * 1215; //1215 = 1 volt
+				if(squareWave[i] > (MAX_SIZE - 1))
+				{
+					squareWave[i] = (MAX_SIZE - 1);
+				}
+			}
+
 		}
 
+		return;
 	}
 
-	return;
-}
-
-void OutputDriver::generatePulse()
-{
-	for(uint32_t i = 0; i < SIZE; i++)
+	else if(shape == pulse)
 	{
-		if((i%10) == 0 && i != 0) //TODO:find a way to avoid division
+		for(uint32_t i = 0; i < SIZE; i++)
 		{
-			pulseWave[i] = amp * 1240; //1215 = 1 volt
+			if((i%10) == 0 && i != 0) //TODO:find a way to avoid division
+			{
+				pulseWave[i] = amp * 1240; //1215 = 1 volt
+			}
+			else
+				pulseWave[i] = 0;
 		}
-		else
-			pulseWave[i] = 0;
+
+		return;
 	}
 
-	return;
-}
-
-
-void OutputDriver::generateDelay(OutputDriver Ch1,uint32_t offset)
-{
-
-	return;
+	else if(shape == delay)
+	{
+		return;
+	}
 }

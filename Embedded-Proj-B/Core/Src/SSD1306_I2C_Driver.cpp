@@ -52,6 +52,7 @@ void OLED::set_code1(uint8_t* upperAddress, uint8_t* lowerAddress, uint8_t* uppe
 				code1[i][j] = lowerData[j];
 		}
 	}
+	return;
 }
 void OLED::set_code2(uint8_t* upperAddress, uint8_t* lowerAddress, uint8_t* upperData, uint8_t* lowerData)
 {
@@ -86,6 +87,7 @@ void OLED::set_code3(uint8_t* upperAddress, uint8_t* lowerAddress, uint8_t* uppe
 				code3[i][j] = lowerData[j];
 		}
 	}
+	return;
 }
 void OLED::set_code4(uint8_t* upperAddress, uint8_t* lowerAddress, uint8_t* upperData, uint8_t* lowerData)
 {
@@ -103,6 +105,7 @@ void OLED::set_code4(uint8_t* upperAddress, uint8_t* lowerAddress, uint8_t* uppe
 				code4[i][j] = lowerData[j];
 		}
 	}
+	return;
 }
 
 bool OLED::isBlank1()
@@ -432,7 +435,7 @@ void OLED::set_OLED()
 	set_page_address(6,7);
 	send_data(code4[3]);
 
-
+	return;
 }
 
 void OLED::updateDisplay(Queue* values)
@@ -824,16 +827,19 @@ void OLED::updateDisplay(Queue* values)
 
 	}
 	set_OLED();
+	return;
 }
 
 void OLED::send_command(uint8_t command)
 {
     HAL_I2C_Mem_Write(&SSD1306_I2C_PORT,SSD1306_I2C_ADDR,0x00, 1, &command, 1, HAL_MAX_DELAY);
+    return;
 }
 
 void OLED::send_data(uint8_t* data)
 {
 	HAL_I2C_Mem_Write(&SSD1306_I2C_PORT, SSD1306_I2C_ADDR, 0x40, 1, data, CHARACTER_SIZE, HAL_MAX_DELAY);
+	return;
 
 }
 
@@ -878,6 +884,7 @@ void OLED::SSD1306_init()
 
     send_command(0xAF); //set display on
     clear_display();
+    return;
 }
 
 void OLED::set_column_address(uint8_t begin, uint8_t end)
@@ -886,6 +893,7 @@ void OLED::set_column_address(uint8_t begin, uint8_t end)
     send_command(SSD1306_SET_COLUMN_ADDR); //set Column address (make a function for this)
     send_command(begin); //column address/position start
     send_command(end); //column address/position end
+    return;
 }
 
 void OLED::set_page_address(uint8_t begin, uint8_t end)
@@ -894,6 +902,7 @@ void OLED::set_page_address(uint8_t begin, uint8_t end)
     send_command(SSD1306_SET_PAGE_ADDR); //set Column address (make a function for this)
     send_command(begin); //column address/position start
     send_command(end); //column address/position end
+    return;
 }
 
 void OLED::fill_display()
@@ -917,6 +926,7 @@ void OLED::fill_display()
 			send_data(fill[i]);
 
 		}
+		return;
 
 }
 
@@ -946,5 +956,5 @@ void OLED::clear_display()
 		}
 
 	}
-
+	return;
 }
