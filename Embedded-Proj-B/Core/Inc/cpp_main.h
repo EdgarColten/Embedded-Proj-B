@@ -15,8 +15,9 @@ typedef enum waveType {sine,square,pulse,delay}wave;
 typedef struct{
 	uint32_t frequency;
 	uint32_t amplitude;
+	uint32_t delay;
 	wave type;
-}waveInfo;
+}waveProp;
 
 
 
