@@ -8,8 +8,7 @@
 #ifndef INC_CPP_MAIN_H_
 #define INC_CPP_MAIN_H_
 
-//universal variables needed in multiple files
-
+//universal types needed in multiple files
 typedef enum waveType {sine,square,pulse,delay}wave;
 
 typedef struct{
@@ -19,6 +18,11 @@ typedef struct{
 	wave type;
 }waveProp;
 
-
+typedef struct{
+	int8_t knobF;
+	int8_t knobA;
+	int8_t knobD;
+	int8_t btn;
+}nextState;
 
 #endif /* INC_CPP_MAIN_H_ */

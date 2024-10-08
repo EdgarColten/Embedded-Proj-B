@@ -39,14 +39,10 @@ extern "C" void cpp_main(void);
 
 void cpp_main(){
 
-//	OutputDriver Channel1 = OutputDriver(1);
-//	OutputDriver Channel2 = OutputDriver(2);
-
-
 	while(1)
 	{
-//		Channel1.update_Channel(1000,2,sine);
-//		Channel2.update_Channel(500, 1, square);
+
+
 
 
 	}
