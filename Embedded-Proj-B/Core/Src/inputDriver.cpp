@@ -8,7 +8,7 @@
 #include "inputDriver.h"
 #include "stm32l4xx_hal.h"
 #include <cstdint>
-//just doing this for git testing purposes
+//just doing this for git testing purposes 2
     inputDriver::inputDriver(GPIO_TypeDef* gpioA,GPIO_TypeDef* gpioB, uint8_t pNum, uint8_t pNum2, int8_t msg)
     {
         gpio_addressA = gpioA;
