@@ -7,22 +7,20 @@
 
 #include <cstdint>
 
+//Custom headers
+#include "cpp_main.h"
+#include "Queue.h"
+
+
 #define ARRAY_SIZE 4
 
 extern "C" void cpp_main(void);
 
-class Channel {
+class Channel { // @suppress("Miss copy constructor or assignment operator")
 private:
-/** **		enum waveType {Sine,Square,Pulse};
-	*
-	*	struct waveProp {
-	*
-	*	uint32_t freq;
-	*	uint32_t amp;
-	*	uint32_t delay;
-	*	enum waveType shape;
-	*	}myWaveProp;
-**/
+	Queue* queue;
+
+	//Might be able to be replaced with a Queue*
 	int8_t queueCount = 0;
 	int8_t qHead = 0;
 	int8_t qTail = 0;
@@ -37,29 +35,35 @@ public:
 		switch(shapeCount){
 
 		case 0:
-			type = sine;
+			myWaveProp.type = sine;
+			break;
 
 		case 1:
-			type = square;
+			myWaveProp.type = square;
+			break;
+
 
 		case 2:
-			type = pulse;
+			myWaveProp.type = pulse;
+			break;
 
+		default:
+			break;
 		return;
 		}
 	}
 
-	void setFreq(uint8_t val){
-		myWaveProp.freq = myWaveProp.freq + val;
+	void setFreq(uint8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
+		myWaveProp.frequency = myWaveProp.frequency + val;
 		return;
 	}
 
-	void setAmp(uint8_t val){
-		myWaveProp.amp = myWaveProp.amp + val;
+	void setAmp(uint8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
+		myWaveProp.amplitude = myWaveProp.amplitude + val;
 		return;
 	}
 
-	void setDelay(uint8_t val){
+	void setDelay(uint8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
 		int8_t delayCount = 0;
 		if(val>0 && delayCount<7){
 			myWaveProp.delay = myWaveProp.delay + val;
@@ -72,7 +76,7 @@ public:
 		return;
 	}
 
-	void cpChannel(waveProp x){
+	void cpChannel(waveProp x){ //x is ch1 so the delay value should be 0. This may not give the correct delay
 		myWaveProp.type = x.type;
 		myWaveProp.frequency = x.frequency;
 		myWaveProp.amplitude = x.amplitude;
@@ -93,7 +97,7 @@ public:
 		return;
 	}
 
-	waveProp dequeueWave(){
+	waveProp dequeueWave(){ //this needs to be a pointer so that there isn't any direct interaction between modules
 		waveProp sendingStruct;
 		sendingStruct = channelQueue[qHead];
 		qHead++;

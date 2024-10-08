@@ -29,6 +29,28 @@ extern TIM_HandleTypeDef htim6;
 //NOTE: 272 = 1 kHz
 //NOTE: 2731 = 100 Hz
 
+//TESTING FOR cpp_main();
+/*
+	waveProp signal1;
+	signal1.amplitude = 2;
+	signal1.frequency = 1000;
+	signal1.type = sine;
+	signal1.delay = 0;
+
+	waveProp signal2;
+	signal2.amplitude = 1;
+	signal2.frequency = 250;
+	signal2.type = delay;
+	signal2.delay = 1;
+
+	OutputDriver Channel1 = OutputDriver(1);
+	OutputDriver Channel2 = OutputDriver(2);
+
+	Channel1.update_Channel(signal1, Channel1);
+	Channel2.update_Channel(signal2, Channel1);
+
+*/
+
 
 
 OutputDriver::OutputDriver(uint8_t chan) // @suppress("Class members should be properly initialized")
@@ -47,10 +69,9 @@ OutputDriver::OutputDriver(uint8_t chan) // @suppress("Class members should be p
 }
 
 
-void OutputDriver::setShape(wave chosenShape)
+wave OutputDriver::getShape()
 {
-	shape = chosenShape;
-	return;
+	return shape;
 }
 
 //setting the Auto Reload value
@@ -61,67 +82,101 @@ void OutputDriver::setAutoReload(TIM_HandleTypeDef* timmer)
 	return;
 }
 
+void OutputDriver::setAttributes(waveProp signal)
+{
+	freq = signal.frequency;
+	amp = signal.amplitude;
+}
 
-void OutputDriver::update_Channel(uint32_t newFreq, uint32_t newAmp, wave chosenShape) //TODO: take a struct opposed to individual values
+void OutputDriver::calculateAutoReload(uint32_t delay)
+{
+	uint32_t trig = 0;
+	trig = freq * SIZE;
+	autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
+	return;
+}
+
+
+
+void OutputDriver::getAttributes(waveProp* dataPoll)
+{
+	dataPoll->amplitude = amp;
+	dataPoll->frequency = freq;
+	dataPoll->type = shape;
+
+	return;
+}
+
+
+void OutputDriver::update_Channel(waveProp signal, OutputDriver channel1) //TODO: take a struct opposed to individual values
 {
 	if(channel == 1)
 	{
-		shape = chosenShape;
+		//shape = signal.type;
 
-		if(shape == sine && updateSine == false)
+		//if(shape == sine && updateSine == false)
+		if(signal.type == sine && updateSine == false)
+
 		{
-			freq = newFreq;
-			amp = newAmp;
-			uint32_t trig = 0;
-			trig = freq * SIZE;
-			autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
+			shape = sine;
+
+			freq = signal.frequency;
+			amp = signal.amplitude;
+
+			calculateAutoReload(signal.delay);
+
 			setAutoReload(&htim2);
 			generateWave();
 
 			HAL_TIM_Base_Start(&htim2);
-			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, sineWave, SIZE, DAC_ALIGN_12B_R);
+			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave, SIZE, DAC_ALIGN_12B_R);
 			updateSine = true;
 		}
-		else if(shape == sine && updateSine == true)
+		else if(signal.type == sine && updateSine == true)
 		{
-			if(newFreq != freq || newAmp != amp)
+			if(signal.frequency != freq || signal.amplitude != amp)
 			{
-				uint32_t trig = 0;
-				freq = newFreq;
-				trig = freq * SIZE;
-				autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
+				shape = sine;
+				freq = signal.frequency;
+				amp = signal.amplitude;
+				calculateAutoReload(signal.delay);
 
+				HAL_TIM_Base_Start(&htim2);
+				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave, SIZE, DAC_ALIGN_12B_R);
 				setAutoReload(&htim2);
 				generateWave();
 
 			}
 		}
 
-		else if(shape == square && updateSquare == false)
+		else if(signal.type == square && updateSquare == false)
 		{
-			freq = newFreq;
-			amp = newAmp;
-			uint32_t trig = 0;
-			trig = freq * SIZE;
-			autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
+			shape = square;
+			freq = signal.frequency;
+			amp = signal.amplitude;
+			calculateAutoReload(signal.delay);
+
 			setAutoReload(&htim2);
 
 			generateWave();
 
 			HAL_TIM_Base_Start(&htim2);
-			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, squareWave, SIZE, DAC_ALIGN_12B_R);
+			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave, SIZE, DAC_ALIGN_12B_R);
 			updateSquare = true;
 
 		}
-		else if(shape == square && updateSquare == true)
+		else if(signal.type == square && updateSquare == true)
 		{
-			if(newFreq != freq || newAmp != amp)
+			if(signal.frequency != freq || signal.amplitude != amp)
 			{
-				uint32_t trig = 0;
-				freq = newFreq;
-				amp = newAmp;
-				trig = freq * SIZE;
-				autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
+				shape = square;
+				freq = signal.frequency;
+				amp = signal.amplitude;
+				calculateAutoReload(signal.delay);
+
+
+				HAL_TIM_Base_Start(&htim2);
+				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave, SIZE, DAC_ALIGN_12B_R);
 
 				setAutoReload(&htim2);
 				generateWave();
@@ -129,30 +184,32 @@ void OutputDriver::update_Channel(uint32_t newFreq, uint32_t newAmp, wave chosen
 			}
 		}
 
-		else if(shape == pulse && updatePulse == false)
+		else if(signal.type == pulse && updatePulse == false)
 		{
-			freq = newFreq;
-			amp = newAmp;
-			uint32_t trig = 0;
-			trig = freq * SIZE;
-			autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
+			shape = pulse;
+			freq = signal.frequency;
+			amp = signal.amplitude;
+			calculateAutoReload(signal.delay);
+
 			setAutoReload(&htim2);
 			generateWave();
 
 			HAL_TIM_Base_Start(&htim2);
-			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, pulseWave, SIZE, DAC_ALIGN_12B_R);
+			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave, SIZE, DAC_ALIGN_12B_R);
 			updatePulse = true;
 
 		}
-		else if(shape == pulse && updatePulse == true)
+		else if(signal.type == pulse && updatePulse == true)
 		{
-			if(newFreq != freq || newAmp != amp)
+			if(signal.frequency != freq || signal.amplitude != amp)
 			{
-				uint32_t trig = 0;
-				freq = newFreq;
-				amp = newAmp;
-				trig = freq * SIZE;
-				autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
+				shape = pulse;
+				freq = signal.frequency;
+				amp = signal.amplitude;
+				calculateAutoReload(signal.delay);
+
+				HAL_TIM_Base_Start(&htim2);
+				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave, SIZE, DAC_ALIGN_12B_R);
 				setAutoReload(&htim2);
 				generateWave();
 			}
@@ -161,31 +218,33 @@ void OutputDriver::update_Channel(uint32_t newFreq, uint32_t newAmp, wave chosen
 	}
 	else if(channel == 2)
 	{
-		shape = chosenShape;
-
-		if(shape == sine && updateSine == false)
+		//HAL_DAC_Stop(&hdac1, DAC1_CHANNEL_2);
+		if(signal.type == sine && updateSine == false)
 		{
-			freq = newFreq;
-			amp = newAmp;
-			uint32_t trig = 0;
-			trig = freq * SIZE;
-			autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
+			shape = sine;
+			freq = signal.frequency;
+			amp = signal.amplitude;
+			calculateAutoReload(signal.delay);
 
 			setAutoReload(&htim6);
 			generateWave();
 
 			HAL_TIM_Base_Start(&htim6);
-			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, sineWave, SIZE, DAC_ALIGN_12B_R);
+			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
 			updateSine = true;
 		}
-		else if(shape == sine && updateSine == true)
+		else if(signal.type == sine && updateSine == true)
 		{
-			if(newFreq != freq || newAmp != amp)
+			if(signal.frequency != freq || signal.amplitude != amp)
 			{
-				uint32_t trig = 0;
-				freq = newFreq;
-				trig = freq * SIZE;
-				autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
+				shape = sine;
+				freq = signal.frequency;
+				amp = signal.amplitude;
+				calculateAutoReload(signal.delay);
+
+				HAL_TIM_Base_Start(&htim6);
+				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
+
 				setAutoReload(&htim6);
 				generateWave();
 
@@ -193,31 +252,33 @@ void OutputDriver::update_Channel(uint32_t newFreq, uint32_t newAmp, wave chosen
 			}
 		}
 
-		else if(shape == square && updateSquare == false)
+		else if(signal.type == square && updateSquare == false)
 		{
-			freq = newFreq;
-			amp = newAmp;
-			uint32_t trig = 0;
-			trig = freq * SIZE;
-			autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
-			setAutoReload(&htim6);
+			shape = square;
+			freq = signal.frequency;
+			amp = signal.amplitude;
+			calculateAutoReload(signal.delay);
 
+			setAutoReload(&htim6);
 			generateWave();
 
 			HAL_TIM_Base_Start(&htim6);
-			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, squareWave, SIZE, DAC_ALIGN_12B_R);
+			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
 			updateSquare = true;
 
 		}
-		else if(shape == square && updateSquare == true)
+		else if(signal.type == square && updateSquare == true)
 		{
-			if(newFreq != freq || newAmp != amp)
+			if(signal.frequency != freq || signal.amplitude != amp)
 			{
-				uint32_t trig = 0;
-				freq = newFreq;
-				amp = newAmp;
-				trig = freq * SIZE;
-				autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
+				shape = square;
+				freq = signal.frequency;
+				amp = signal.amplitude;
+				calculateAutoReload(signal.delay);
+
+				HAL_TIM_Base_Start(&htim6);
+				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
+
 				setAutoReload(&htim6);
 				generateWave();
 
@@ -225,31 +286,33 @@ void OutputDriver::update_Channel(uint32_t newFreq, uint32_t newAmp, wave chosen
 			}
 		}
 
-		else if(shape == pulse && updatePulse == false)
+		else if(signal.type == pulse && updatePulse == false)
 		{
-			freq = newFreq;
-			amp = newAmp;
-			uint32_t trig = 0;
-			trig = freq * SIZE;
-			autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
+			shape = pulse;
+			freq = signal.frequency;
+			amp = signal.amplitude;
+			calculateAutoReload(signal.delay);
 
 			setAutoReload(&htim6);
 			generateWave();
 
 			HAL_TIM_Base_Start(&htim6);
-			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, pulseWave, SIZE, DAC_ALIGN_12B_R);
+			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
 			updatePulse = true;
 
 		}
-		else if(shape == pulse && updatePulse == true)
+		else if(signal.type == pulse && updatePulse == true)
 		{
-			if(newFreq != freq || newAmp != amp)
+			if(signal.frequency != freq || signal.amplitude != amp)
 			{
-				uint32_t trig = 0;
-				freq = newFreq;
-				amp = newAmp;
-				trig = freq * SIZE;
-				autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
+				shape = pulse;
+				freq = signal.frequency;
+				amp = signal.amplitude;
+				calculateAutoReload(signal.delay);
+
+				HAL_TIM_Base_Start(&htim6);
+				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
+
 				setAutoReload(&htim6);
 				generateWave();
 
@@ -257,13 +320,61 @@ void OutputDriver::update_Channel(uint32_t newFreq, uint32_t newAmp, wave chosen
 			}
 		}
 
-		else if(shape == delay)
+		else if(signal.type == delay)
 		{
-			/*
-			//generateDelay();
-			HAL_TIM_Base_Start(&htim6);
-			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, pulseWave, SIZE, DAC_ALIGN_12B_R);
-			*/
+			waveProp data;
+			channel1.getAttributes(&data);
+
+			switch(channel1.getShape())
+			{
+				case sine:
+				{
+					shape = sine;
+					setAttributes(data);
+					calculateAutoReload(signal.delay);
+					setAutoReload(&htim6);
+					generateWave();
+
+					HAL_TIM_Base_Start(&htim6);
+					HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
+
+					return;
+					break;
+				}
+
+				case square:
+				{
+					shape = square;
+					setAttributes(data);
+					calculateAutoReload(signal.delay);
+					setAutoReload(&htim6);
+					generateWave();
+
+					HAL_TIM_Base_Start(&htim6);
+					HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
+
+					return;
+					break;
+				}
+
+				case pulse:
+				{
+					shape = pulse;
+					setAttributes(data);
+					calculateAutoReload(signal.delay);
+					setAutoReload(&htim6);
+					generateWave();
+
+					HAL_TIM_Base_Start(&htim6);
+					HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
+					return;
+					break;
+				}
+
+				default:
+					break;
+			}
+
 		}
 		return;
 	}
@@ -278,10 +389,10 @@ void OutputDriver::generateWave()
 {
 	if(shape == sine)
 	{
-		uint32_t amplifier = amp * 1240;
+		uint32_t amplifier = amp * 1215; //1215 = 1V
 		for(uint32_t i = 0; i < SIZE; i++)
 		{
-			sineWave[i] =  (sin(i*(2*PI)/SIZE) + 1) * (amplifier/2); //TODO:find a way to avoid division
+			outWave[i] =  ((sin(i*(2*PI)/SIZE) + 1) * (amplifier/2)) - (delay/8); //TODO:find a way to avoid division
 		}
 		return;
 	}
@@ -292,14 +403,14 @@ void OutputDriver::generateWave()
 		{
 			if(i < SIZE/2) //TODO:find a way to avoid division
 			{
-				squareWave[i] = 0;
+				outWave[i] = 0;
 			}
 			else
 			{
-				squareWave[i] = amp * 1215; //1215 = 1 volt
-				if(squareWave[i] > (MAX_SIZE - 1))
+				outWave[i] = amp * 1215; //1215 = 1 volt
+				if(outWave[i] > (MAX_SIZE - 1))
 				{
-					squareWave[i] = (MAX_SIZE - 1);
+					outWave[i] = (MAX_SIZE - 1);
 				}
 			}
 
@@ -314,10 +425,10 @@ void OutputDriver::generateWave()
 		{
 			if((i%10) == 0 && i != 0) //TODO:find a way to avoid division
 			{
-				pulseWave[i] = amp * 1240; //1215 = 1 volt
+				outWave[i] = amp * 1215; //1215 = 1 volt
 			}
 			else
-				pulseWave[i] = 0;
+				outWave[i] = 0;
 		}
 
 		return;
