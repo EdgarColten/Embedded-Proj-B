@@ -39,19 +39,22 @@ private:
 	bool updateDelay;
 
 	//Output wave tables
-	uint32_t sineWave[SIZE];
-	uint32_t squareWave[SIZE];
-	uint32_t pulseWave[SIZE];
-	uint32_t delayWave[SIZE];
+	uint32_t outWave[SIZE];
 
 	//Setting wave type
 	enum waveType shape; //delay is only for channel 2
 
 public:
 	OutputDriver(uint8_t);
-	void update_Channel(uint32_t, uint32_t, wave);
+	void update_Channel(waveProp,OutputDriver);
+	void calculateAutoReload(uint32_t);
+
+	void setAttributes(waveProp);
+	void getAttributes(waveProp*);
 	void generateWave();
-	void setShape(wave);
+	wave getShape();
+	uint32_t getAmp();
+	uint32_t getFreq();
 	void setAutoReload(TIM_HandleTypeDef*);
 };
 
