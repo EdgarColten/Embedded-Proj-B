@@ -9,7 +9,16 @@
 #define INC_CPP_MAIN_H_
 
 //universal types needed in multiple files
+#define ONE_MS 80000
+#define ONE_S 8000000
+
 typedef enum waveType {sine,square,pulse,delay}wave;
+
+typedef struct{
+	uint32_t F;
+	wave type;
+	uint8_t channel;
+} displayValues;
 
 typedef struct{
 	uint32_t frequency;
