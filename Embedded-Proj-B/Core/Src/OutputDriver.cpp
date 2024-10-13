@@ -322,7 +322,6 @@ void OutputDriver::update_Channel(waveProp signal, OutputDriver channel1) //TODO
 				dValues.type = shape;
 				dValues.channel = 2;
 				queue->enqueue(dValues);
-				queue->enqueue(dValues);
 			}
 		}
 

@@ -13,6 +13,93 @@
 #include "displayQueue.h"
 
 
+//TEST for Display
+	/*
+	displayQueue OLED_Queue1;
+	displayQueue OLED_Queue2;
+
+	OutputDriver Channel1 = OutputDriver(1,&OLED_Queue1);
+	OutputDriver Channel2 = OutputDriver(2,&OLED_Queue2);
+
+	OLED display1 = OLED(1,&OLED_Queue1);
+	OLED display2 = OLED(2,&OLED_Queue2);
+
+	waveProp signal1;
+	signal1.amplitude = 2;
+	signal1.frequency = 750;
+	signal1.type = sine;
+	signal1.delay = 0;
+
+	waveProp signal2;
+	signal2.amplitude = 1;
+	signal2.frequency = 500;
+	signal2.type = square;
+	signal2.delay = 0;
+
+
+	Channel1.update_Channel(signal1, Channel1);
+	Channel2.update_Channel(signal2, Channel1);
+
+
+	uint32_t count_s = 1;
+	uint32_t count_2s = (2 * 1);
+	uint32_t count_4s = (2 * 1);
+
+	while(1)
+	{
+
+		if(!count_s)
+		{
+			Channel1.update_Channel(signal1, Channel1);
+			Channel2.update_Channel(signal2, Channel1);
+
+			display1.updateDisplay();
+			display2.updateDisplay();
+
+			count_2s--;
+			count_s = 1;
+		}
+
+		if(!count_2s)
+		{
+			if(signal1.frequency > 1000)
+				signal1.frequency = 0;
+			else
+				signal1.frequency++;
+
+			if(signal2.frequency > 1000)
+				signal2.frequency = 0;
+			else
+				signal2.frequency++;
+
+			count_4s--;
+			count_2s = (2 * 1);
+		}
+
+		if(!count_4s)
+		{
+			if(signal1.type == pulse)
+				signal1.type = sine;
+
+			else if(signal1.type == sine)
+				signal1.type = square;
+
+			else if(signal1.type == square)
+				signal1.type = pulse;
+
+			if(signal2.type == pulse)
+				signal2.type = sine;
+
+			else if(signal2.type == sine)
+				signal2.type = square;
+
+			else if(signal2.type == square)
+				signal2.type = pulse;
+
+			count_4s = (2 * 1);
+		}
+		count_s--;
+*/
 
 OLED::OLED(uint8_t chann,displayQueue* q){ // @suppress("Class members should be properly initialized")
 	queue = q;
@@ -25,8 +112,7 @@ OLED::OLED(uint8_t chann,displayQueue* q){ // @suppress("Class members should be
 		for(int32_t j = 0; j < 16; j++)
 		{
 			code[i][j] = 0x00;
-			//code1[i][j] = 0x00;
-			//code2[i][j] = 0x00;
+
 		}
 	}
 
@@ -44,18 +130,6 @@ void OLED::set_partial_code(uint8_t* value, uint8_t position)
 	return;
 }
 
-/*
-void OLED::set_partial_code2(uint8_t* value, uint8_t position)
-{
-
-	for(int32_t i = 0; i < 16; i++)
-	{
-		code2[position][i] = value[i];
-	}
-	return;
-}
-*/
-
 void OLED::set_OLED()
 {
 	clear_display();
@@ -72,7 +146,6 @@ void OLED::set_OLED()
 	set_column_address(30,37);
 	set_page_address(0,1);
 	send_data(one);
-
 
 	//page 2 & 3
 	set_column_address(12,19);
@@ -94,9 +167,6 @@ void OLED::set_OLED()
 	set_column_address(50,57);
 	set_page_address(2,3);
 	send_data(equal);
-
-
-
 
 	//page 4 & 5
 	set_column_address(12,19);
@@ -132,7 +202,6 @@ void OLED::set_OLED()
 	set_page_address(6,7);
 	send_data(equal);
 
-
 	return;
 }
 
@@ -140,7 +209,7 @@ void OLED::updateChannel_1()
 {
 	clearChannel_1();
 
-	//value TODO: display the frequency1 value
+	//frequency display
 	set_column_address(61,68);
 	set_page_address(2,3);
 	send_data(code[0]);
@@ -157,9 +226,7 @@ void OLED::updateChannel_1()
 	set_page_address(2,3);
 	send_data(code[3]);
 
-
-
-	//shape TODO: display the wave1 type
+	//Wave display
 	set_column_address(112,119);
 	set_page_address(2,3);
 	send_data(code[4]);
@@ -170,12 +237,10 @@ void OLED::updateChannel_1()
 
 	return;
 }
-
 void OLED::updateChannel_2()
 {
 	clearChannel_2();
 
-	//value TODO: display the frequency2 value
 	set_column_address(61,68);
 	set_page_address(6,7);
 	send_data(code[0]);
@@ -193,7 +258,6 @@ void OLED::updateChannel_2()
 	send_data(code[3]);
 
 
-	//shape TODO: display the wave2 type
 	set_column_address(112,119);
 	set_page_address(6,7);
 	send_data(code[4]);
