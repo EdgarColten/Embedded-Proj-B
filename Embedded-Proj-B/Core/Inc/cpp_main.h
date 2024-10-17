@@ -20,7 +20,7 @@ typedef struct{
 	uint8_t channel;
 } displayValues;
 
-typedef struct{
+typedef struct{ //passed to the outputDriver for data collected by the input
 	uint32_t frequency;
 	uint32_t amplitude;
 	uint32_t delay;
