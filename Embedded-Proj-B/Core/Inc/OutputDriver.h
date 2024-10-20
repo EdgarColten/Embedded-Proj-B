@@ -10,8 +10,9 @@
 #include "stm32l4xx_hal.h"
 
 //Custom includes
-#include "Queue.h"
 #include "cpp_main.h"
+#include "displayQueue.h"
+#include "Queue.h"
 
 #ifndef INC_OUTPUTDRIVER_H_
 #define INC_OUTPUTDRIVER_H_
@@ -21,10 +22,12 @@
 #define SIZE 256
 #define CPU_CLK 80000000
 
+#define PHASE_SHIFT 32 //value to shift the outWave buffer for the delay
+
 class OutputDriver{ // @suppress("Miss copy constructor or assignment operator")
 private:
 
-	Queue* queue;
+	displayQueue* queue;
 
 	//Core attributes
 	uint32_t freq;
@@ -40,22 +43,26 @@ private:
 
 	//Output wave tables
 	uint32_t outWave[SIZE];
-
+	uint32_t delayOutWave[SIZE];
 	//Setting wave type
 	enum waveType shape; //delay is only for channel 2
 
+	//packing values for the display
+	displayValues dValues;
+
+
 public:
-	OutputDriver(uint8_t);
+	OutputDriver(uint8_t,displayQueue*);
 	void update_Channel(waveProp,OutputDriver);
-	void calculateAutoReload(uint32_t);
+	void calculateAutoReload();
 
 	void setAttributes(waveProp);
 	void getAttributes(waveProp*);
 	void generateWave();
-	wave getShape();
-	uint32_t getAmp();
-	uint32_t getFreq();
 	void setAutoReload(TIM_HandleTypeDef*);
+
+	void delaySet(uint8_t);
+
 };
 
 #endif /* INC_OUTPUTDRIVER_H_ */
