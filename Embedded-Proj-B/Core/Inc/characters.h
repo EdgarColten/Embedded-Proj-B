@@ -46,6 +46,21 @@ extern uint8_t E[16];
 
 extern uint8_t F[16];
 
+extern uint8_t R[16];
+
+extern uint8_t Q[16];
+
+extern uint8_t H[16];
+
+extern uint8_t SQUARE[16];
+
+extern uint8_t SINE1[16];
+
+extern uint8_t SINE2[16];
+
+extern uint8_t PULSE[16];
+
+extern uint8_t DELAY[16];
 
 extern uint8_t blank[16];
 

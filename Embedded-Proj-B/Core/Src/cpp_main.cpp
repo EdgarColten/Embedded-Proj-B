@@ -10,7 +10,7 @@
 // DAC1 both channels enabled {PA4 = DAC1_OUT1 and PA5 = DAC1_OUT2}
 //
 // Current Clock config:
-// SysClk = 70 MHz
+// SysClk = 80 MHz
 //
 // Current Timer config:
 // tim2 enabled
@@ -32,17 +32,16 @@
 #include "cpp_main.h"
 #include "Queue.h"
 #include "OutputDriver.h"
-
+#include "SSD1306_I2C_Driver.h"
 
 extern "C" void cpp_main(void);
 
 
 void cpp_main(){
 
+
 	while(1)
 	{
-
-
 
 
 	}
