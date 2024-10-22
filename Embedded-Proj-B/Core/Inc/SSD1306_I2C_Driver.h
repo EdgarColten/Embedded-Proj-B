@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include "main.h"
 
-#include "Queue.h"
+#include "displayQueue.h"
 
 
 #ifndef INC_SSD1306_I2C_DRIVER_H_
@@ -40,34 +40,49 @@ Then data input will be decoded and written to the corresponding command registe
 #define SSD1306_SET_PAGE_ADDR 0x22
 
 
-class OLED{
+class OLED{ // @suppress("Miss copy constructor or assignment operator")
 private:
 	//uint8_t character[16];
-	uint8_t code1[4][16];
-	uint8_t code2[4][16];
-	uint8_t code3[4][16];
-	uint8_t code4[4][16];
+	displayQueue* queue;
+	uint32_t waveFreq[4];
+
+	//use these to compare the last struct to the new struct being dequeued
+	displayValues storedValues;
+	bool startUpF;
+	bool startUpW;
+
+	uint8_t channel;
+
+	uint8_t code[6][16];
+
 
 public:
-	OLED();
+	OLED(uint8_t,displayQueue*);
+
+	//I2C commands to set the display up and set what it displays
 	void send_command(uint8_t);
 	void send_data(uint8_t*);
+
+	//Background set up for the display to initialize and to be able to set positions on the display
 	void set_OLED();
 	void SSD1306_init();
 	void set_column_address(uint8_t,uint8_t);
 	void set_page_address(uint8_t,uint8_t);
-	void fill_display();
 	void clear_display();
-	bool isBlank1();
-	bool isBlank2();
-	bool isBlank3();
-	bool isBlank4();
-	void set_partial_code1(uint8_t*, uint8_t);
-    void set_code1(uint8_t*,uint8_t*,uint8_t*, uint8_t*);
-	void set_code2(uint8_t*,uint8_t*,uint8_t*, uint8_t*);
-	void set_code3(uint8_t*,uint8_t*,uint8_t*, uint8_t*);
-	void set_code4(uint8_t*,uint8_t*,uint8_t*, uint8_t*);
-	void updateDisplay(Queue*);
+
+
+	void set_partial_code(uint8_t*, uint8_t);
+
+	void updateChannel_1();
+	void updateChannel_2();
+
+
+	void clearChannel_1();
+	void clearChannel_2();
+
+	void updateDisplay();
+
+	void I2C_Initialize();
 
 };
 

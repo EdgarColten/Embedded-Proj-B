@@ -6,167 +6,42 @@
  */
 #include "main.h"
 #include <cstdint>
-
 #include "stm32l4xx_hal.h"
+#include "stm32l4xx_ll_i2c.h"
+
+//custom includes
 #include "SSD1306_I2C_Driver.h"
 #include "characters.h"
+#include "displayQueue.h"
 
 
+OLED::OLED(uint8_t chann,displayQueue* dQ){ // @suppress("Class members should be properly initialized")
+	queue = dQ;
+	channel = chann;
+	startUpF = false;
+	startUpW = false;
 
-OLED::OLED(){
-	for(int32_t i = 0; i < 4; i++)
+	for(int32_t i = 0; i < 6; i++)
 	{
 		for(int32_t j = 0; j < 16; j++)
 		{
-			code1[i][j] = 0x00;
-			code2[i][j] = 0x00;
-			code3[i][j] = 0x00;
-			code4[i][j] = 0x00;
+			code[i][j] = 0x00;
+
 		}
 	}
 
+	SSD1306_init();
+	set_OLED();
 }
 
-void OLED::set_partial_code1(uint8_t* value, uint8_t position)
+void OLED::set_partial_code(uint8_t* value, uint8_t position)
 {
 
 	for(int32_t i = 0; i < 16; i++)
 	{
-		code1[position][i] = value[i];
+		code[position][i] = value[i];
 	}
 	return;
-}
-void OLED::set_code1(uint8_t* upperAddress, uint8_t* lowerAddress, uint8_t* upperData, uint8_t* lowerData)
-{
-	for(int32_t i = 0; i < 4; i++)
-	{
-		for(int32_t j = 0; j < 16; j++)
-		{
-			if(i == 0)
-				code1[i][j] = upperAddress[j];
-			else if(i == 1)
-				code1[i][j] = lowerAddress[j];
-            else if(i == 2)
-				code1[i][j] = upperData[j];
-			else if(i == 3)
-				code1[i][j] = lowerData[j];
-		}
-	}
-	return;
-}
-void OLED::set_code2(uint8_t* upperAddress, uint8_t* lowerAddress, uint8_t* upperData, uint8_t* lowerData)
-{
-	for(int32_t i = 0; i < 4; i++)
-	{
-		for(int32_t j = 0; j < 16; j++)
-		{
-			if(i == 0)
-				code2[i][j] = upperAddress[j];
-			else if(i == 1)
-				code2[i][j] = lowerAddress[j];
-            else if(i == 2)
-				code2[i][j] = upperData[j];
-			else if(i == 3)
-				code2[i][j] = lowerData[j];
-		}
-	}
-}
-void OLED::set_code3(uint8_t* upperAddress, uint8_t* lowerAddress, uint8_t* upperData, uint8_t* lowerData)
-{
-	for(int32_t i = 0; i < 4; i++)
-	{
-		for(int32_t j = 0; j < 16; j++)
-		{
-			if(i == 0)
-				code3[i][j] = upperAddress[j];
-			else if(i == 1)
-				code3[i][j] = lowerAddress[j];
-            else if(i == 2)
-				code3[i][j] = upperData[j];
-			else if(i == 3)
-				code3[i][j] = lowerData[j];
-		}
-	}
-	return;
-}
-void OLED::set_code4(uint8_t* upperAddress, uint8_t* lowerAddress, uint8_t* upperData, uint8_t* lowerData)
-{
-	for(int32_t i = 0; i < 4; i++)
-	{
-		for(int32_t j = 0; j < 16; j++)
-		{
-			if(i == 0)
-				code4[i][j] = upperAddress[j];
-			else if(i == 1)
-				code4[i][j] = lowerAddress[j];
-            else if(i == 2)
-				code4[i][j] = upperData[j];
-			else if(i == 3)
-				code4[i][j] = lowerData[j];
-		}
-	}
-	return;
-}
-
-bool OLED::isBlank1()
-{
-
-	for(int32_t i = 0; i < 4; i++)
-	{
-		for(int32_t j = 0; j < 16; j++)
-		{
-			if(code1[i][j] != 0)
-			{
-				return false;
-			}
-		}
-	}
-	return true;
-}
-bool OLED::isBlank2()
-{
-
-	for(int32_t i = 0; i < 4; i++)
-	{
-		for(int32_t j = 0; j < 16; j++)
-		{
-			if(code2[i][j] != 0)
-			{
-				return false;
-			}
-		}
-	}
-	return true;
-}
-bool OLED::isBlank3()
-{
-
-	for(int32_t i = 0; i < 4; i++)
-	{
-		for(int32_t j = 0; j < 16; j++)
-		{
-			if(code3[i][j] != 0)
-			{
-				return false;
-			}
-		}
-	}
-	return true;
-}
-bool OLED::isBlank4()
-{
-
-	for(int32_t i = 0; i < 4; i++)
-	{
-		for(int32_t j = 0; j < 16; j++)
-		{
-			if(code4[i][j] != 0)
-			{
-				return false;
-			}
-		}
-	}
-	return true;
 }
 
 void OLED::set_OLED()
@@ -174,661 +49,1034 @@ void OLED::set_OLED()
 	clear_display();
 
 	//page 0 & 1
-	if(isBlank1() == false)
-	{
-		set_column_address(12,19);
-		set_page_address(0,1);
-		send_data(zero);
+	set_column_address(12,19);
+	set_page_address(0,1);
+	send_data(C);
 
-		set_column_address(21,28);
-		set_page_address(0,1);
-		send_data(x);
+	set_column_address(21,28);
+	set_page_address(0,1);
+	send_data(H);
 
-        set_column_address(58,65);
-		set_page_address(0,1);
-		send_data(vertLine);
-
-        set_column_address(76,83);
-		set_page_address(0,1);
-		send_data(zero);
-
-		set_column_address(85,92);
-		set_page_address(0,1);
-		send_data(x);
-	}
-
-	else
-	{
-		set_column_address(12,19);
-		set_page_address(0,1);
-		send_data(blank);
-
-		set_column_address(21,28);
-		set_page_address(0,1);
-		send_data(blank);
-
-        set_column_address(58,65);
-		set_page_address(0,1);
-		send_data(blank);
-
-        set_column_address(76,83);
-		set_page_address(0,1);
-		send_data(blank);
-
-		set_column_address(85,92);
-		set_page_address(0,1);
-		send_data(blank);
-	}
-
-    //Address
 	set_column_address(30,37);
 	set_page_address(0,1);
-	send_data(code1[0]);
-
-	set_column_address(39,46);
-	set_page_address(0,1);
-	send_data(code1[1]);
-
-    //Data
-	set_column_address(94,101);
-	set_page_address(0,1);
-	send_data(code1[2]);
-
-	set_column_address(103,110);
-	set_page_address(0,1);
-	send_data(code1[3]);
+	send_data(one);
 
 	//page 2 & 3
-	if(isBlank2() == false)
-	{
-		set_column_address(12,19);
-		set_page_address(2,3);
-		send_data(zero);
+	set_column_address(12,19);
+	set_page_address(2,3);
+	send_data(F);
 
-		set_column_address(21,28);
-		set_page_address(2,3);
-		send_data(x);
+	set_column_address(21,28);
+	set_page_address(2,3);
+	send_data(R);
 
-        set_column_address(58,65);
-		set_page_address(2,3);
-		send_data(vertLine);
-
-        set_column_address(76,83);
-		set_page_address(2,3);
-		send_data(zero);
-
-		set_column_address(85,92);
-		set_page_address(2,3);
-		send_data(x);
-	}
-
-	else
-	{
-		set_column_address(12,19);
-		set_page_address(2,3);
-		send_data(blank);
-
-		set_column_address(21,28);
-		set_page_address(2,3);
-		send_data(blank);
-
-        set_column_address(58,65);
-		set_page_address(2,3);
-		send_data(blank);
-
-        set_column_address(76,83);
-		set_page_address(2,3);
-		send_data(blank);
-
-		set_column_address(85,92);
-		set_page_address(2,3);
-		send_data(blank);
-	}
-
-    //Address
 	set_column_address(30,37);
 	set_page_address(2,3);
-	send_data(code2[0]);
+	send_data(E);
 
 	set_column_address(39,46);
 	set_page_address(2,3);
-	send_data(code2[1]);
+	send_data(Q);
 
-    //Data
-	set_column_address(94,101);
+	set_column_address(50,57);
 	set_page_address(2,3);
-	send_data(code2[2]);
-
-	set_column_address(103,110);
-	set_page_address(2,3);
-	send_data(code2[3]);
+	send_data(equal);
 
 	//page 4 & 5
-	if(isBlank3() == false)
-	{
-		set_column_address(12,19);
-		set_page_address(4,5);
-		send_data(zero);
+	set_column_address(12,19);
+	set_page_address(4,5);
+	send_data(C);
 
-		set_column_address(21,28);
-		set_page_address(4,5);
-		send_data(x);
+	set_column_address(21,28);
+	set_page_address(4,5);
+	send_data(H);
 
-        set_column_address(58,65);
-		set_page_address(4,5);
-		send_data(vertLine);
-
-        set_column_address(76,83);
-		set_page_address(4,5);
-		send_data(zero);
-
-		set_column_address(85,92);
-		set_page_address(4,5);
-		send_data(x);
-
-	}
-
-	else
-	{
-		set_column_address(12,19);
-		set_page_address(4,5);
-		send_data(blank);
-
-		set_column_address(21,28);
-		set_page_address(4,5);
-		send_data(blank);
-
-        set_column_address(58,65);
-		set_page_address(4,5);
-		send_data(blank);
-
-        set_column_address(76,83);
-		set_page_address(4,5);
-		send_data(blank);
-
-		set_column_address(85,92);
-		set_page_address(4,5);
-		send_data(blank);
-	}
-
-
-    //Address
 	set_column_address(30,37);
 	set_page_address(4,5);
-	send_data(code3[0]);
-
-	set_column_address(39,46);
-	set_page_address(4,5);
-	send_data(code3[1]);
-
-    //Data
-	set_column_address(94,101);
-	set_page_address(4,5);
-	send_data(code3[2]);
-
-	set_column_address(103,110);
-	set_page_address(4,5);
-	send_data(code3[3]);
+	send_data(two);
 
 	//page 6 & 7
-	if(isBlank4() == false)
-	{
-		set_column_address(12,19);
-		set_page_address(6,7);
-		send_data(zero);
+	set_column_address(12,19);
+	set_page_address(6,7);
+	send_data(F);
 
-		set_column_address(21,28);
-		set_page_address(6,7);
-		send_data(x);
+	set_column_address(21,28);
+	set_page_address(6,7);
+	send_data(R);
 
-        set_column_address(58,65);
-		set_page_address(6,7);
-		send_data(vertLine);
-
-        set_column_address(76,83);
-		set_page_address(6,7);
-		send_data(zero);
-
-		set_column_address(85,92);
-		set_page_address(6,7);
-		send_data(x);
-	}
-
-	else
-	{
-		set_column_address(12,19);
-		set_page_address(6,7);
-		send_data(blank);
-
-		set_column_address(21,28);
-		set_page_address(6,7);
-		send_data(blank);
-
-        set_column_address(58,65);
-		set_page_address(6,7);
-		send_data(blank);
-
-        set_column_address(76,83);
-		set_page_address(6,7);
-		send_data(blank);
-
-		set_column_address(85,92);
-		set_page_address(6,7);
-		send_data(blank);
-	}
-
-    //Address
 	set_column_address(30,37);
 	set_page_address(6,7);
-	send_data(code4[0]);
+	send_data(E);
 
 	set_column_address(39,46);
 	set_page_address(6,7);
-	send_data(code4[1]);
+	send_data(Q);
 
-    //Data
-	set_column_address(94,101);
+	set_column_address(50,57);
 	set_page_address(6,7);
-	send_data(code4[2]);
-
-	set_column_address(103,110);
-	set_page_address(6,7);
-	send_data(code4[3]);
+	send_data(equal);
 
 	return;
 }
 
-void OLED::updateDisplay(Queue* values)
+void OLED::updateChannel_1()
 {
-	int32_t displayValue;
-	uint32_t upperAddress = 0;
-	uint32_t lowerAddress = 0;
-    uint32_t upperData = 0;
-	uint32_t lowerData = 0;
+	clearChannel_1();
+
+	//frequency display
+	set_column_address(61,68);
+	set_page_address(2,3);
+	send_data(code[0]);
+
+	set_column_address(70,77);
+	set_page_address(2,3);
+	send_data(code[1]);
+
+	set_column_address(79,86);
+	set_page_address(2,3);
+	send_data(code[2]);
+
+	set_column_address(88,95);
+	set_page_address(2,3);
+	send_data(code[3]);
+
+	//Wave display
+	set_column_address(112,119);
+	set_page_address(2,3);
+	send_data(code[4]);
+
+	set_column_address(120,127);
+	set_page_address(2,3);
+	send_data(code[5]);
+
+	return;
+}
+void OLED::updateChannel_2()
+{
+	clearChannel_2();
+
+	set_column_address(61,68);
+	set_page_address(6,7);
+	send_data(code[0]);
+
+	set_column_address(70,77);
+	set_page_address(6,7);
+	send_data(code[1]);
+
+	set_column_address(79,86);
+	set_page_address(6,7);
+	send_data(code[2]);
+
+	set_column_address(88,95);
+	set_page_address(6,7);
+	send_data(code[3]);
 
 
+	set_column_address(112,119);
+	set_page_address(6,7);
+	send_data(code[4]);
 
-	bool notEmpty = values->dequeue(&displayValue);
+	set_column_address(120,127);
+	set_page_address(6,7);
+	send_data(code[5]);
+
+	return;
+}
+
+void OLED::updateDisplay()
+{
+	displayValues dValue;
+	bool notEmpty = queue->dequeue(&dValue);
 
 	if(notEmpty == false)
 		return;
 
-    upperAddress = ((((displayValue >> 8) & 0xFF) >> 4) & 0x0F);
-    lowerAddress = (((displayValue >> 8) & 0xFF) & 0x0F);
-
-	upperData = ((displayValue & 0xFF) >> 4) & 0x0F;
-	lowerData = (displayValue & 0xFF) & 0x0F;
 
 
-
-	set_code4(code3[0],code3[1],code3[2],code3[3]);
-	set_code3(code2[0],code2[1],code2[2],code2[3]);
-	set_code2(code1[0],code1[1],code1[2],code1[3]);
-
-	switch(upperAddress)
+	if(storedValues.F != dValue.F && startUpF == true) //indicates a new frequency
 	{
-		case 0x00:
+		storedValues.F = dValue.F;
+
+		waveFreq[0] = (storedValues.F - (storedValues.F%1000)) / 1000;
+		waveFreq[1] = (storedValues.F%1000 - storedValues.F%100) /100;
+		waveFreq[2] = (((storedValues.F%1000)%100) - (storedValues.F%10)) /10;
+		waveFreq[3] = (((storedValues.F%1000)%100)%10);
+
+		switch(waveFreq[0])
 		{
-			set_partial_code1(zero,0);
-			break;
+			case 0:
+			{
+				set_partial_code(blank,0);
+				break;
+			}
+			case 1:
+			{
+				set_partial_code(one,0);
+				break;
+			}
+
+			default:
+			{
+				set_partial_code(blank,0);
+				break;
+			}
+
 		}
-		case 0x01:
+
+		switch(waveFreq[1])
 		{
-			set_partial_code1(one,0);
-			break;
+			case 0:
+			{
+				if(waveFreq[0] == 0)
+				{
+					set_partial_code(blank,1);
+					break;
+				}
+				else
+				{
+					set_partial_code(zero,1);
+					break;
+				}
+
+			}
+			case 1:
+			{
+
+				set_partial_code(one,1);
+				break;
+			}
+			case 2:
+			{
+
+				set_partial_code(two,1);
+				break;
+			}
+			case 3:
+			{
+
+				set_partial_code(three,1);
+				break;
+			}
+			case 4:
+			{
+
+				set_partial_code(four,1);
+				break;
+			}
+			case 5:
+			{
+
+				set_partial_code(five,1);
+				break;
+			}
+			case 6:
+			{
+
+				set_partial_code(six,1);
+				break;
+			}
+			case 7:
+			{
+
+				set_partial_code(seven,1);
+				break;
+			}
+			case 8:
+			{
+
+				set_partial_code(eight,1);
+				break;
+			}
+			case 9:
+			{
+
+				set_partial_code(nine,1);
+				break;
+			}
+
+			default:
+			{
+				set_partial_code(blank,1);
+				break;
+			}
+
 		}
-		case 0x02:
+
+		switch(waveFreq[2])
 		{
-			set_partial_code1(two,0);
-			break;
+			case 0:
+			{
+				if(waveFreq[1] == 0 && waveFreq[0] == 0)
+				{
+					set_partial_code(blank,2);
+					break;
+				}
+
+				set_partial_code(zero,2);
+				break;
+			}
+			case 1:
+			{
+				set_partial_code(one,2);
+				break;
+			}
+			case 2:
+			{
+				set_partial_code(two,2);
+				break;
+			}
+			case 3:
+			{
+				set_partial_code(three,2);
+				break;
+			}
+			case 4:
+			{
+				set_partial_code(four,2);
+				break;
+			}
+			case 5:
+			{
+				set_partial_code(five,2);
+				break;
+			}
+			case 6:
+			{
+				set_partial_code(six,2);
+				break;
+			}
+			case 7:
+			{
+				set_partial_code(seven,2);
+				break;
+			}
+			case 8:
+			{
+				set_partial_code(eight,2);
+				break;
+			}
+			case 9:
+			{
+				set_partial_code(nine,2);
+				break;
+			}
+
+			default:
+			{
+				set_partial_code(blank,2);
+				break;
+			}
+
 		}
-		case 0x03:
+
+		switch(waveFreq[3])
 		{
-			set_partial_code1(three,0);
-			break;
+			case 0:
+			{
+				set_partial_code(zero,3);
+				break;
+			}
+			case 1:
+			{
+				set_partial_code(one,3);
+				break;
+			}
+			case 2:
+			{
+				set_partial_code(two,3);
+				break;
+			}
+			case 3:
+			{
+				set_partial_code(three,3);
+				break;
+			}
+			case 4:
+			{
+				set_partial_code(four,3);
+				break;
+			}
+			case 5:
+			{
+				set_partial_code(five,3);
+				break;
+			}
+			case 6:
+			{
+				set_partial_code(six,3);
+				break;
+			}
+			case 7:
+			{
+				set_partial_code(seven,3);
+				break;
+			}
+			case 8:
+			{
+				set_partial_code(eight,3);
+				break;
+			}
+			case 9:
+			{
+				set_partial_code(nine,3);
+				break;
+			}
+
+			default:
+			{
+				set_partial_code(blank,3);
+				break;
+			}
+
 		}
-		case 0x04:
+		if(channel == 1)
 		{
-			set_partial_code1(four,0);
-			break;
+			updateChannel_1();
 		}
-		case 0x05:
+
+		if(channel == 2)
 		{
-			set_partial_code1(five,0);
-			break;
+			updateChannel_2();
 		}
-		case 0x06:
+	}
+
+	else if (storedValues.F != dValue.F && startUpF == false)
+	{
+		storedValues.F = dValue.F;
+
+		waveFreq[0] = (storedValues.F - (storedValues.F%1000)) / 1000;
+		waveFreq[1] = (storedValues.F%1000 - storedValues.F%100) /100;
+		waveFreq[2] = (((storedValues.F%1000)%100) - (storedValues.F%10)) /10;
+		waveFreq[3] = (((storedValues.F%1000)%100)%10);
+
+		switch(waveFreq[0])
 		{
-			set_partial_code1(six,0);
-			break;
+			case 0:
+			{
+				set_partial_code(blank,0);
+				break;
+			}
+			case 1:
+			{
+				set_partial_code(one,0);
+				break;
+			}
+
+			default:
+			{
+				set_partial_code(blank,0);
+				break;
+			}
+
 		}
-		case 0x07:
+
+		switch(waveFreq[1])
 		{
-			set_partial_code1(seven,0);
-			break;
+			case 0:
+			{
+				if(waveFreq[0] == 0)
+				{
+					set_partial_code(blank,1);
+					break;
+				}
+				else
+				{
+					set_partial_code(zero,1);
+					break;
+				}
+
+			}
+			case 1:
+			{
+
+				set_partial_code(one,1);
+				break;
+			}
+			case 2:
+			{
+
+				set_partial_code(two,1);
+				break;
+			}
+			case 3:
+			{
+
+				set_partial_code(three,1);
+				break;
+			}
+			case 4:
+			{
+
+				set_partial_code(four,1);
+				break;
+			}
+			case 5:
+			{
+
+				set_partial_code(five,1);
+				break;
+			}
+			case 6:
+			{
+
+				set_partial_code(six,1);
+				break;
+			}
+			case 7:
+			{
+
+				set_partial_code(seven,1);
+				break;
+			}
+			case 8:
+			{
+
+				set_partial_code(eight,1);
+				break;
+			}
+			case 9:
+			{
+
+				set_partial_code(nine,1);
+				break;
+			}
+
+			default:
+			{
+				set_partial_code(blank,1);
+				break;
+			}
+
 		}
-		case 0x08:
+
+		switch(waveFreq[2])
 		{
-			set_partial_code1(eight,0);
-			break;
+			case 0:
+			{
+				if(waveFreq[1] == 0 && waveFreq[0] == 0)
+				{
+					set_partial_code(blank,2);
+					break;
+				}
+
+				set_partial_code(zero,2);
+				break;
+			}
+			case 1:
+			{
+				set_partial_code(one,2);
+				break;
+			}
+			case 2:
+			{
+				set_partial_code(two,2);
+				break;
+			}
+			case 3:
+			{
+				set_partial_code(three,2);
+				break;
+			}
+			case 4:
+			{
+				set_partial_code(four,2);
+				break;
+			}
+			case 5:
+			{
+				set_partial_code(five,2);
+				break;
+			}
+			case 6:
+			{
+				set_partial_code(six,2);
+				break;
+			}
+			case 7:
+			{
+				set_partial_code(seven,2);
+				break;
+			}
+			case 8:
+			{
+				set_partial_code(eight,2);
+				break;
+			}
+			case 9:
+			{
+				set_partial_code(nine,2);
+				break;
+			}
+
+			default:
+			{
+				set_partial_code(blank,2);
+				break;
+			}
+
 		}
-		case 0x09:
+
+
+		switch(waveFreq[3])
 		{
-			set_partial_code1(nine,0);
-			break;
+			case 0:
+			{
+				set_partial_code(zero,3);
+				break;
+			}
+			case 1:
+			{
+				set_partial_code(one,3);
+				break;
+			}
+			case 2:
+			{
+				set_partial_code(two,3);
+				break;
+			}
+			case 3:
+			{
+				set_partial_code(three,3);
+				break;
+			}
+			case 4:
+			{
+				set_partial_code(four,3);
+				break;
+			}
+			case 5:
+			{
+				set_partial_code(five,3);
+				break;
+			}
+			case 6:
+			{
+				set_partial_code(six,3);
+				break;
+			}
+			case 7:
+			{
+				set_partial_code(seven,3);
+				break;
+			}
+			case 8:
+			{
+				set_partial_code(eight,3);
+				break;
+			}
+			case 9:
+			{
+				set_partial_code(nine,3);
+				break;
+			}
+
+			default:
+			{
+				set_partial_code(blank,3);
+				break;
+			}
+
 		}
-		case 0x0A:
+		startUpF = true;
+
+		if(channel == 1)
 		{
-			set_partial_code1(A,0);
-			break;
+			updateChannel_1();
 		}
-		case 0x0B:
+
+		if(channel == 2)
 		{
-			set_partial_code1(B,0);
-			break;
-		}
-		case 0x0C:
-		{
-			set_partial_code1(C,0);
-			break;
-		}
-		case 0x0D:
-		{
-			set_partial_code1(D,0);
-			break;
-		}
-		case 0x0E:
-		{
-			set_partial_code1(E,0);
-			break;
-		}
-		case 0x0F:
-		{
-			set_partial_code1(F,0);
-			break;
-		}
-		default:
-		{
-			set_partial_code1(blank,0);
-			break;
+			updateChannel_2();
 		}
 
 	}
 
-
-	switch(lowerAddress)
+	else
 	{
-		case 0x00:
+		switch(waveFreq[0])
 		{
-			set_partial_code1(zero,1);
-			break;
+			case 0:
+			{
+				set_partial_code(blank,0);
+				break;
+			}
+			case 1:
+			{
+				set_partial_code(one,0);
+				break;
+			}
+
+			default:
+			{
+				set_partial_code(blank,0);
+				break;
+			}
+
 		}
-		case 0x01:
+
+		switch(waveFreq[1])
 		{
-			set_partial_code1(one,1);
-			break;
+			case 0:
+			{
+				if(waveFreq[0] == 0)
+				{
+					set_partial_code(blank,1);
+					break;
+				}
+				else
+				{
+					set_partial_code(zero,1);
+					break;
+				}
+
+			}
+			case 1:
+			{
+
+				set_partial_code(one,1);
+				break;
+			}
+			case 2:
+			{
+
+				set_partial_code(two,1);
+				break;
+			}
+			case 3:
+			{
+
+				set_partial_code(three,1);
+				break;
+			}
+			case 4:
+			{
+
+				set_partial_code(four,1);
+				break;
+			}
+			case 5:
+			{
+
+				set_partial_code(five,1);
+				break;
+			}
+			case 6:
+			{
+
+				set_partial_code(six,1);
+				break;
+			}
+			case 7:
+			{
+
+				set_partial_code(seven,1);
+				break;
+			}
+			case 8:
+			{
+
+				set_partial_code(eight,1);
+				break;
+			}
+			case 9:
+			{
+
+				set_partial_code(nine,1);
+				break;
+			}
+
+			default:
+			{
+				set_partial_code(blank,1);
+				break;
+			}
+
 		}
-		case 0x02:
+
+		switch(waveFreq[2])
 		{
-			set_partial_code1(two,1);
-			break;
+			case 0:
+			{
+				if(waveFreq[1] == 0 && waveFreq[0] == 0)
+				{
+					set_partial_code(blank,2);
+					break;
+				}
+
+				set_partial_code(zero,2);
+				break;
+			}
+			case 1:
+			{
+				set_partial_code(one,2);
+				break;
+			}
+			case 2:
+			{
+				set_partial_code(two,2);
+				break;
+			}
+			case 3:
+			{
+				set_partial_code(three,2);
+				break;
+			}
+			case 4:
+			{
+				set_partial_code(four,2);
+				break;
+			}
+			case 5:
+			{
+				set_partial_code(five,2);
+				break;
+			}
+			case 6:
+			{
+				set_partial_code(six,2);
+				break;
+			}
+			case 7:
+			{
+				set_partial_code(seven,2);
+				break;
+			}
+			case 8:
+			{
+				set_partial_code(eight,2);
+				break;
+			}
+			case 9:
+			{
+				set_partial_code(nine,2);
+				break;
+			}
+
+			default:
+			{
+				set_partial_code(blank,2);
+				break;
+			}
+
 		}
-		case 0x03:
+
+
+		switch(waveFreq[3])
 		{
-			set_partial_code1(three,1);
-			break;
+			case 0:
+			{
+				set_partial_code(zero,3);
+				break;
+			}
+			case 1:
+			{
+				set_partial_code(one,3);
+				break;
+			}
+			case 2:
+			{
+				set_partial_code(two,3);
+				break;
+			}
+			case 3:
+			{
+				set_partial_code(three,3);
+				break;
+			}
+			case 4:
+			{
+				set_partial_code(four,3);
+				break;
+			}
+			case 5:
+			{
+				set_partial_code(five,3);
+				break;
+			}
+			case 6:
+			{
+				set_partial_code(six,3);
+				break;
+			}
+			case 7:
+			{
+				set_partial_code(seven,3);
+				break;
+			}
+			case 8:
+			{
+				set_partial_code(eight,3);
+				break;
+			}
+			case 9:
+			{
+				set_partial_code(nine,3);
+				break;
+			}
+
+			default:
+			{
+				set_partial_code(blank,3);
+				break;
+			}
+
 		}
-		case 0x04:
+		startUpF = true;
+
+		if(channel == 1)
 		{
-			set_partial_code1(four,1);
-			break;
+			updateChannel_1();
 		}
-		case 0x05:
+
+		if(channel == 2)
 		{
-			set_partial_code1(five,1);
-			break;
+			updateChannel_2();
 		}
-		case 0x06:
+
+
+	}
+
+	if(storedValues.type != dValue.type && startUpW == true)
+	{
+		storedValues.type = dValue.type;
+		switch(storedValues.type)
 		{
-			set_partial_code1(six,1);
-			break;
+			case sine:
+			{
+				set_partial_code(SINE1,4);
+				set_partial_code(SINE2,5);
+				break;
+			}
+			case square:
+			{
+				set_partial_code(SQUARE,4);
+				set_partial_code(SQUARE,5);
+				break;
+			}
+			case pulse:
+			{
+				set_partial_code(PULSE,4);
+				set_partial_code(PULSE,5);
+				break;
+			}
+			case delay:
+			{
+				set_partial_code(D,4);
+				set_partial_code(D,5);
+				break;
+			}
+			default:
+				break;
 		}
-		case 0x07:
+		if(channel == 1)
 		{
-			set_partial_code1(seven,1);
-			break;
+			updateChannel_1();
 		}
-		case 0x08:
+
+		if(channel == 2)
 		{
-			set_partial_code1(eight,1);
-			break;
+			updateChannel_2();
 		}
-		case 0x09:
+	}
+	else if(storedValues.type != dValue.type && startUpW == false)
+	{
+
+		storedValues.type = dValue.type;
+		switch(storedValues.type)
 		{
-			set_partial_code1(nine,1);
-			break;
+			case sine:
+			{
+				set_partial_code(SINE1,4);
+				set_partial_code(SINE2,5);
+				break;
+			}
+			case square:
+			{
+				set_partial_code(SQUARE,4);
+				set_partial_code(SQUARE,5);
+				break;
+			}
+			case pulse:
+			{
+				set_partial_code(PULSE,4);
+				set_partial_code(PULSE,5);
+				break;
+			}
+			case delay:
+			{
+				set_partial_code(D,4);
+				set_partial_code(D,5);
+				break;
+			}
+			default:
+				break;
 		}
-		case 0x0A:
+		startUpW = true;
+
+		if(channel == 1)
 		{
-			set_partial_code1(A,1);
-			break;
+			updateChannel_1();
 		}
-		case 0x0B:
+
+		if(channel == 2)
 		{
-			set_partial_code1(B,1);
-			break;
-		}
-		case 0x0C:
-		{
-			set_partial_code1(C,1);
-			break;
-		}
-		case 0x0D:
-		{
-			set_partial_code1(D,1);
-			break;
-		}
-		case 0x0E:
-		{
-			set_partial_code1(E,1);
-			break;
-		}
-		case 0x0F:
-		{
-			set_partial_code1(F,1);
-			break;
-		}
-		default:
-		{
-			set_partial_code1(blank,1);
-			break;
+			updateChannel_2();
 		}
 
 	}
 
-	switch(upperData)
+	else
 	{
-		case 0x00:
+		switch(storedValues.type)
 		{
-			set_partial_code1(zero,2);
-			break;
+			case sine:
+			{
+				set_partial_code(SINE1,4);
+				set_partial_code(SINE2,5);
+				break;
+			}
+			case square:
+			{
+				set_partial_code(SQUARE,4);
+				set_partial_code(SQUARE,5);
+				break;
+			}
+			case pulse:
+			{
+				set_partial_code(PULSE,4);
+				set_partial_code(PULSE,5);
+				break;
+			}
+			case delay:
+			{
+				set_partial_code(D,4);
+				set_partial_code(D,5);
+				break;
+			}
+			default:
+				break;
 		}
-		case 0x01:
+		startUpW = true;
+
+		if(channel == 1)
 		{
-			set_partial_code1(one,2);
-			break;
+			updateChannel_1();
 		}
-		case 0x02:
+
+		if(channel == 2)
 		{
-			set_partial_code1(two,2);
-			break;
+			updateChannel_2();
 		}
-		case 0x03:
-		{
-			set_partial_code1(three,2);
-			break;
-		}
-		case 0x04:
-		{
-			set_partial_code1(four,2);
-			break;
-		}
-		case 0x05:
-		{
-			set_partial_code1(five,2);
-			break;
-		}
-		case 0x06:
-		{
-			set_partial_code1(six,2);
-			break;
-		}
-		case 0x07:
-		{
-			set_partial_code1(seven,2);
-			break;
-		}
-		case 0x08:
-		{
-			set_partial_code1(eight,2);
-			break;
-		}
-		case 0x09:
-		{
-			set_partial_code1(nine,2);
-			break;
-		}
-		case 0x0A:
-		{
-			set_partial_code1(A,2);
-			break;
-		}
-		case 0x0B:
-		{
-			set_partial_code1(B,2);
-			break;
-		}
-		case 0x0C:
-		{
-			set_partial_code1(C,2);
-			break;
-		}
-		case 0x0D:
-		{
-			set_partial_code1(D,2);
-			break;
-		}
-		case 0x0E:
-		{
-			set_partial_code1(E,2);
-			break;
-		}
-		case 0x0F:
-		{
-			set_partial_code1(F,2);
-			break;
-		}
-		default:
-		{
-			set_partial_code1(blank,2);
-			break;
-		}
+
 
 	}
 
-
-	switch(lowerData)
-	{
-		case 0x00:
-		{
-			set_partial_code1(zero,3);
-			break;
-		}
-		case 0x01:
-		{
-			set_partial_code1(one,3);
-			break;
-		}
-		case 0x02:
-		{
-			set_partial_code1(two,3);
-			break;
-		}
-		case 0x03:
-		{
-			set_partial_code1(three,3);
-			break;
-		}
-		case 0x04:
-		{
-			set_partial_code1(four,3);
-			break;
-		}
-		case 0x05:
-		{
-			set_partial_code1(five,3);
-			break;
-		}
-		case 0x06:
-		{
-			set_partial_code1(six,3);
-			break;
-		}
-		case 0x07:
-		{
-			set_partial_code1(seven,3);
-			break;
-		}
-		case 0x08:
-		{
-			set_partial_code1(eight,3);
-			break;
-		}
-		case 0x09:
-		{
-			set_partial_code1(nine,3);
-			break;
-		}
-		case 0x0A:
-		{
-			set_partial_code1(A,3);
-			break;
-		}
-		case 0x0B:
-		{
-			set_partial_code1(B,3);
-			break;
-		}
-		case 0x0C:
-		{
-			set_partial_code1(C,3);
-			break;
-		}
-		case 0x0D:
-		{
-			set_partial_code1(D,3);
-			break;
-		}
-		case 0x0E:
-		{
-			set_partial_code1(E,3);
-			break;
-		}
-		case 0x0F:
-		{
-			set_partial_code1(F,3);
-			break;
-		}
-		default:
-		{
-			set_partial_code1(blank,3);
-			break;
-		}
-
-	}
-	set_OLED();
 	return;
+
 }
+
+
+
 
 void OLED::send_command(uint8_t command)
 {
@@ -905,31 +1153,6 @@ void OLED::set_page_address(uint8_t begin, uint8_t end)
     return;
 }
 
-void OLED::fill_display()
-{
-	set_column_address(0,127);
-		set_page_address(0,7);
-		uint8_t fill[8][128] = {
-		{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-		{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-		{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-		{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-		{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-		{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-		{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-		{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
-		};
-
-		for(int32_t i = 0; i < 8; i++)
-		{
-
-			send_data(fill[i]);
-
-		}
-		return;
-
-}
-
 void OLED::clear_display()
 {
 	set_column_address(0,127);
@@ -957,4 +1180,66 @@ void OLED::clear_display()
 
 	}
 	return;
+}
+
+void OLED::clearChannel_1()
+{
+	set_column_address(61,68);
+	set_page_address(2,3);
+	send_data(blank);
+
+	set_column_address(70,77);
+	set_page_address(2,3);
+	send_data(blank);
+
+	set_column_address(79,86);
+	set_page_address(2,3);
+	send_data(blank);
+
+	set_column_address(88,95);
+	set_page_address(2,3);
+	send_data(blank);
+
+	set_column_address(112,119);
+	set_page_address(2,3);
+	send_data(blank);
+
+	set_column_address(120,127);
+	set_page_address(2,3);
+	send_data(blank);
+	return;
+}
+
+void OLED::clearChannel_2()
+{
+	set_column_address(61,68);
+	set_page_address(6,7);
+	send_data(blank);
+
+	set_column_address(70,77);
+	set_page_address(6,7);
+	send_data(blank);
+
+	set_column_address(79,86);
+	set_page_address(6,7);
+	send_data(blank);
+
+	set_column_address(88,95);
+	set_page_address(6,7);
+	send_data(blank);
+
+	set_column_address(112,119);
+	set_page_address(6,7);
+	send_data(blank);
+
+	set_column_address(120,127);
+	set_page_address(6,7);
+	send_data(blank);
+
+	return;
+}
+
+void OLED::I2C_Initialize()
+{
+
 }

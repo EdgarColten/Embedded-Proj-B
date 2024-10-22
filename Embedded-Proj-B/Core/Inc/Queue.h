@@ -9,19 +9,19 @@
 #ifndef INC_QUEUE_H_
 #define INC_QUEUE_H_
 
-#define QUEUE_BUFFER_SIZE 10
-#define BUFFER_END 15
+#define QUEUE_BUFF_SIZE 256
+#define BUFF_END 255
 
 
 class Queue{
-    int32_t buffer[QUEUE_BUFFER_SIZE];
+    uint32_t buffer[QUEUE_BUFF_SIZE];
     uint8_t head = 0;
     uint8_t tail = 0;
 
 public:
     Queue();
-    bool enqueue(int32_t msg);
-    bool dequeue(int32_t* msg);
+    bool enqueue(uint32_t msg);
+    bool dequeue(uint32_t* msg);
 };
 
 #endif /* INC_QUEUE_H_ */
