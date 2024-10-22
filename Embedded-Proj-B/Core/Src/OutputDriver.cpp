@@ -4,10 +4,23 @@
  *  Created on: Sep 26, 2024
  *      Author: LogMa
  */
+/*
+ * JPL rules demonstrated (Logan)
+ * Level 3:
+ * 	-Rule 16: The use of Assertions.
+ * 	-Rule :
+ * 	-Rule :
+ * Level 4:
+ * 	-Rule 21: Macros shall not be #define'd within a function or a block.
+ * 	-Rule 22: #undef shall not be used.
+ * 	-Rule 31: #include directives in a file shall only be preceded by other preprocessor directives or comments.
+ */
 
 #include <cstdint>
-#include "math.h"
+#include <cassert>
+
 #include "main.h"
+#include "math.h"
 #include "stm32l4xx_hal.h"
 #include "stm32l4xx_hal_dac.h"
 
@@ -21,72 +34,104 @@
 
 
 extern DAC_HandleTypeDef hdac1;
-//extern DMA_HandleTypeDef hdma_dac_ch1;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim6;
 
 
 //NOTE: 3.3v = 4095
-//NOTE: 1v = 1215
+//NOTE: 1v = 1240
 //NOTE: 272 = 1 kHz
 //NOTE: 2731 = 100 Hz
 
 //TESTING FOR cpp_main();
 /*
+
 	displayQueue OLED_Queue1;
 	displayQueue OLED_Queue2;
 
+	OutputDriver Channel1 = OutputDriver(1,&OLED_Queue1);
+	OutputDriver Channel2 = OutputDriver(2,&OLED_Queue2);
+
+	OLED display1 = OLED(1,&OLED_Queue1);
+	OLED display2 = OLED(2,&OLED_Queue2);
+
 	waveProp signal1;
 	signal1.amplitude = 2;
-	signal1.frequency = 500;
-	signal1.type = sine;
+	signal1.frequency = 1;
+	signal1.type = square;
 	signal1.delay = 0;
 
 	waveProp signal2;
 	signal2.amplitude = 1;
-	signal2.frequency = 1000;
-	signal2.type = delay;
+	signal2.frequency = 830;
+	signal2.type = sine;
 	signal2.delay = 3;
-
-
-	OutputDriver Channel1 = OutputDriver(1,&OLED_Queue1);
-	OutputDriver Channel2 = OutputDriver(2,&OLED_Queue2);
 
 
 	Channel1.update_Channel(signal1, Channel1);
 	Channel2.update_Channel(signal2, Channel1);
 
 
+	display1.updateDisplay();
+	display2.updateDisplay();
+
+	Channel1.update_Channel(signal1, Channel1);
+	Channel2.update_Channel(signal2, Channel1);
+
+
+	signal2.type = pulse;
+	signal2.frequency = 764;
+	Channel2.update_Channel(signal2, Channel1);
+	display2.updateDisplay();
+
+
+	signal1.type = sine;
+	signal1.frequency = 84;
+	Channel1.update_Channel(signal1, Channel1);
+	display1.updateDisplay();
+
+	signal2.type = delay;
+	signal2.delay = 5;
+	Channel2.update_Channel(signal2, Channel1);
+	display2.updateDisplay();
+
+	Channel2.update_Channel(signal2, Channel1);
+	display2.updateDisplay();
+
 */
 
 
-OutputDriver::OutputDriver(uint8_t chan,displayQueue* q) // @suppress("Class members should be properly initialized")
+OutputDriver::OutputDriver(uint8_t chan,displayQueue* dQ) // @suppress("Class members should be properly initialized")
 {
-	queue = q;
+	oledQueue = dQ;
 	freq = 1;
 	amp = 1;
+	offset = 0;
 	shape = sine;
 	autoReload = 2731;
 	channel = chan;
 
-	//update_Channel(freq,amp,shape);	//Generation check objects
-	updateSine = false;
-	updateSquare = false;
-	updatePulse = false;
-	updateDelay = false;
 }
 
 
 //setting the Auto Reload value
-void OutputDriver::setAutoReload(TIM_HandleTypeDef* timmer)
+void OutputDriver::setAutoReload(TIM_HandleTypeDef* timer)
 {
-    (timmer)->Instance->ARR = (autoReload);
-    (timmer)->Init.Period = (autoReload);
+
+	//TODO: improve tests and assertions
+
+
+    (timer)->Instance->ARR = (autoReload);
+    (timer)->Init.Period = (autoReload);
 	return;
 }
 
 void OutputDriver::setAttributes(waveProp signal)
 {
+	//TODO: improve tests and assertions
+	assert(signal.amplitude > 0);
+	assert(signal.frequency > 0);
+
 	shape = signal.type;
 	freq = signal.frequency;
 	amp = signal.amplitude;
@@ -94,7 +139,7 @@ void OutputDriver::setAttributes(waveProp signal)
 	return;
 }
 
-void OutputDriver::calculateAutoReload()//Period of the signal
+void OutputDriver::calculateAutoReload() //Period of the signal
 {
 	uint32_t trig = 0;
 	trig = freq * (SIZE);
@@ -104,6 +149,8 @@ void OutputDriver::calculateAutoReload()//Period of the signal
 
 void OutputDriver::getAttributes(waveProp* dataPoll)
 {
+	assert(dataPoll != nullptr);
+
 	dataPoll->amplitude = amp;
 	dataPoll->frequency = freq;
 	dataPoll->type = shape;
@@ -111,18 +158,19 @@ void OutputDriver::getAttributes(waveProp* dataPoll)
 	return;
 }
 
-
-void OutputDriver::update_Channel(waveProp signal, OutputDriver channel1) //TODO: take a struct opposed to individual values
+void OutputDriver::update_Channel(waveProp signal, OutputDriver channel1) //TODO: take out struct and just use queue attribute
 {
-	if(channel == 1)
+	//waveProp signal;
+	//signalQueue.dequeue(&signal);
+	if((freq != signal.frequency || amp != signal.amplitude || shape != signal.type) && signal.type != delay)
 	{
-
-		if(signal.type == sine && updateSine == false) //This is the initial time that the sine wave generator is called thus all calcs are needed
+		if(channel == 1)
 		{
-		//	shape = sine;
-		//	freq = signal.frequency;
-		//	amp = signal.amplitude;
-			setAttributes(signal);
+			waveProp testSignal;
+			testSignal.amplitude = -1;
+			testSignal.frequency = 0;
+
+			setAttributes(testSignal);
 			calculateAutoReload();
 
 			setAutoReload(&htim2);
@@ -131,277 +179,38 @@ void OutputDriver::update_Channel(waveProp signal, OutputDriver channel1) //TODO
 			HAL_TIM_Base_Start(&htim2);
 			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave, SIZE, DAC_ALIGN_12B_R);
 
-			dValues.F = freq;
-			dValues.type = shape;
-			dValues.channel = 1;
-			queue->enqueue(dValues);
-			updateSine = true;
-		}
-		else if(signal.type == sine && updateSine == true) //This condition can avoid the calcs if the information hasn't changed thus taking less time to return
-		{
-			if(signal.frequency != freq || signal.amplitude != amp)
-			{
-			//	shape = sine;
-			//	freq = signal.frequency;
-			//	amp = signal.amplitude;
+			pack();
+			oledQueue->enqueue(dValues);
 
-				setAttributes(signal);
-				calculateAutoReload();
-
-				HAL_TIM_Base_Start(&htim2);
-				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave, SIZE, DAC_ALIGN_12B_R);
-				setAutoReload(&htim2);
-				generateWave();
-
-				dValues.F = freq;
-				dValues.type = shape;
-				dValues.channel = 1;
-				queue->enqueue(dValues);
-
-			}
+			return;
 		}
 
-		else if(signal.type == square && updateSquare == false)
+		else if(channel == 2)
 		{
-		//	shape = square;
-		//	freq = signal.frequency;
-		//	amp = signal.amplitude;
-
 			setAttributes(signal);
 			calculateAutoReload();
 
-			setAutoReload(&htim2);
-
+			setAutoReload(&htim6);
 			generateWave();
 
-			HAL_TIM_Base_Start(&htim2);
-			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave, SIZE, DAC_ALIGN_12B_R);
+			HAL_TIM_Base_Start(&htim6);
+			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
 
-			dValues.F = freq;
-			dValues.type = shape;
-			dValues.channel = 1;
-			queue->enqueue(dValues);
-			updateSquare = true;
+			pack();
+			oledQueue->enqueue(dValues);
 
+			return;
 		}
-		else if(signal.type == square && updateSquare == true)
-		{
-			if(signal.frequency != freq || signal.amplitude != amp)
-			{
-			//	shape = square;
-			//	freq = signal.frequency;
-			//	amp = signal.amplitude;
-
-				setAttributes(signal);
-				calculateAutoReload();
-
-
-				HAL_TIM_Base_Start(&htim2);
-				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave, SIZE, DAC_ALIGN_12B_R);
-
-				setAutoReload(&htim2);
-				generateWave();
-
-				dValues.F = freq;
-				dValues.type = shape;
-				dValues.channel = 1;
-				queue->enqueue(dValues);
-				queue->enqueue(dValues);
-
-			}
-		}
-
-		else if(signal.type == pulse && updatePulse == false)
-		{
-		//	shape = pulse;
-		//	freq = signal.frequency;
-		//	amp = signal.amplitude;
-
-			setAttributes(signal);
-			calculateAutoReload();
-
-			setAutoReload(&htim2);
-			generateWave();
-
-			HAL_TIM_Base_Start(&htim2);
-			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave, SIZE, DAC_ALIGN_12B_R);
-
-			dValues.F = freq;
-			dValues.type = shape;
-			dValues.channel = 1;
-			queue->enqueue(dValues);
-			updatePulse = true;
-
-		}
-		else if(signal.type == pulse && updatePulse == true)
-		{
-			if(signal.frequency != freq || signal.amplitude != amp)
-			{
-			//	shape = pulse;
-			//	freq = signal.frequency;
-			//	amp = signal.amplitude;
-
-				setAttributes(signal);
-				calculateAutoReload();
-
-				HAL_TIM_Base_Start(&htim2);
-				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave, SIZE, DAC_ALIGN_12B_R);
-				setAutoReload(&htim2);
-				generateWave();
-
-				dValues.F = freq;
-				dValues.type = shape;
-				dValues.channel = 1;
-				queue->enqueue(dValues);
-			}
-		}
-
-		return;
 	}
-	else if(channel == 2)
+
+	else if(signal.type == delay)
 	{
-		if(signal.type == sine && updateSine == false)
+		waveProp data; //local
+		channel1.getAttributes(&data);
+
+		if(freq != data.frequency || amp != data.amplitude || shape != data.type || offset != signal.delay)
 		{
-		//	shape = sine;
-		//	freq = signal.frequency;
-		//	amp = signal.amplitude;
-
-			setAttributes(signal);
-			calculateAutoReload();
-
-			setAutoReload(&htim6);
-			generateWave();
-
-			HAL_TIM_Base_Start(&htim6);
-			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
-
-			dValues.F = freq;
-			dValues.type = shape;
-			dValues.channel = 2;
-			queue->enqueue(dValues);
-			updateSine = true;
-		}
-		else if(signal.type == sine && updateSine == true)
-		{
-			if(signal.frequency != freq || signal.amplitude != amp)
-			{
-			//	shape = sine;
-			//	freq = signal.frequency;
-			//	amp = signal.amplitude;
-
-				setAttributes(signal);
-				calculateAutoReload();
-
-				HAL_TIM_Base_Start(&htim6);
-				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
-
-				setAutoReload(&htim6);
-				generateWave();
-
-				dValues.F = freq;
-				dValues.type = shape;
-				dValues.channel = 2;
-				queue->enqueue(dValues);
-			}
-		}
-
-		else if(signal.type == square && updateSquare == false)
-		{
-		//	shape = square;
-		//	freq = signal.frequency;
-		//	amp = signal.amplitude;
-
-			setAttributes(signal);
-			calculateAutoReload();
-
-			setAutoReload(&htim6);
-			generateWave();
-
-			HAL_TIM_Base_Start(&htim6);
-			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
-
-			dValues.F = freq;
-			dValues.type = shape;
-			dValues.channel = 2;
-			queue->enqueue(dValues);
-			updateSquare = true;
-
-		}
-		else if(signal.type == square && updateSquare == true)
-		{
-			if(signal.frequency != freq || signal.amplitude != amp)
-			{
-			//	shape = square;
-			//	freq = signal.frequency;
-			//	amp = signal.amplitude;
-
-				setAttributes(signal);
-				calculateAutoReload();
-
-				HAL_TIM_Base_Start(&htim6);
-				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
-
-				setAutoReload(&htim6);
-				generateWave();
-
-				dValues.F = freq;
-				dValues.type = shape;
-				dValues.channel = 2;
-				queue->enqueue(dValues);
-			}
-		}
-
-		else if(signal.type == pulse && updatePulse == false)
-		{
-		//	shape = pulse;
-		//	freq = signal.frequency;
-		//	amp = signal.amplitude;
-
-			setAttributes(signal);
-			calculateAutoReload();
-
-			setAutoReload(&htim6);
-			generateWave();
-
-			HAL_TIM_Base_Start(&htim6);
-			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
-
-			dValues.F = freq;
-			dValues.type = shape;
-			dValues.channel = 2;
-			queue->enqueue(dValues);
-			updatePulse = true;
-
-		}
-		else if(signal.type == pulse && updatePulse == true)
-		{
-			if(signal.frequency != freq || signal.amplitude != amp)
-			{
-			//	shape = pulse;
-			//	freq = signal.frequency;
-			//	amp = signal.amplitude;
-
-				setAttributes(signal);
-				calculateAutoReload();
-
-				HAL_TIM_Base_Start(&htim6);
-				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
-
-				setAutoReload(&htim6);
-				generateWave();
-
-				dValues.F = freq;
-				dValues.type = shape;
-				dValues.channel = 2;
-				queue->enqueue(dValues);
-
-			}
-		}
-
-		else if(signal.type == delay)
-		{
-			waveProp data; //local
-			channel1.getAttributes(&data);
+			offset = signal.delay;
 			setAttributes(data);
 
 			calculateAutoReload();
@@ -414,140 +223,41 @@ void OutputDriver::update_Channel(waveProp signal, OutputDriver channel1) //TODO
 			HAL_TIM_Base_Start(&htim6);
 			HAL_TIM_Base_Start(&htim2);
 
-			if(signal.delay == 0)
+			if(offset == 0)
 			{
 				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave, SIZE, DAC_ALIGN_12B_R);
 				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
 			}
-			else if(signal.delay > 0 && signal.delay < 8)
+			else if(offset > 0 && offset < 8)
 			{
-				delaySet(signal.delay);
+				delaySet();
 				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave, SIZE, DAC_ALIGN_12B_R);
 				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, delayOutWave, SIZE, DAC_ALIGN_12B_R);
 
 			}
-
-/*
-			switch(data.type)
-			{
-				case sine:
-				{
-					shape = sine;
-					setAttributes(data);
-					calculateAutoReload();
-					//interruptARR = ((signal.delay/8)*autoReload);
-
-					setAutoReload(&htim6);
-
-					//The plan is to delay the start of htim6 so that I can offset the channel two output.
-					//I'll start by testing the sine wave then move onto the others
-					//Still need to test this code
-//					interruptARR = ((delay/8)*autoReload);
-
-					generateWave();
-
-					if(interruptARR == 0)
-					{
-						HAL_DAC_Stop_DMA(&hdac1, DAC1_CHANNEL_1);
-						HAL_TIM_Base_Start(&htim6);
-						HAL_TIM_Base_Start(&htim2);
-						HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave, SIZE, DAC_ALIGN_12B_R);
-						HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
-
-					}
-
-					else
-					{
-						HAL_DAC_Stop_DMA(&hdac1, DAC1_CHANNEL_1);
-						//HAL_TIM_Base_Start(&htim2);
-						HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave, SIZE, DAC_ALIGN_12B_R);
-
-						HAL_DAC_Stop_DMA(&hdac1, DAC1_CHANNEL_2);
-						HAL_TIM_Base_Stop(&htim6);
-
-
-
-						//HAL_TIM_Base_Start(&htim16);
-
-						//HAL_TIM_Base_Start(&htim6);
-						HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
-					}
-
-
-
-
-					dValues.F = freq;
-					dValues.type = shape;
-					dValues.channel = 2;
-					queue->enqueue(dValues);
-					return;
-					break;
-				}
-
-				case square:
-				{
-					shape = square;
-					setAttributes(data);
-					calculateAutoReload();
-					setAutoReload(&htim6);
-
-
-					generateWave();
-
-					HAL_TIM_Base_Start(&htim6);
-					HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
-
-					dValues.F = freq;
-					dValues.type = shape;
-					dValues.channel = 2;
-					queue->enqueue(dValues);
-					return;
-					break;
-				}
-
-				case pulse:
-				{
-					shape = pulse;
-					setAttributes(data);
-					calculateAutoReload();
-					setAutoReload(&htim6);
-
-					generateWave();
-
-					HAL_TIM_Base_Start(&htim6);
-					HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
-
-
-					dValues.F = freq;
-					dValues.type = shape;
-					dValues.channel = 2;
-					queue->enqueue(dValues);
-					return;
-					break;
-				}
-
-				default:
-					break;
-			}
-*/
+			pack();
+			oledQueue->enqueue(dValues);
+			return;
 		}
-		dValues.F = freq;
-		dValues.type = shape;
-		dValues.channel = 2;
-		queue->enqueue(dValues);
-		return;
-	}
-	dValues.F = freq;
-	dValues.type = shape;
-	dValues.channel = 2;
-	queue->enqueue(dValues);
-	return;
 
+		else
+			return;
+	}
+
+	else
+		return;
 }
 
-void OutputDriver::delaySet(uint8_t delayValue)
+void OutputDriver::pack()
 {
-	uint32_t shift = delayValue * PHASE_SHIFT;
+	dValues.F = freq;
+	dValues.type = shape;
+	dValues.channel = channel;
+}
+
+void OutputDriver::delaySet()
+{
+	uint32_t shift = offset * PHASE_SHIFT;
 	Queue shiftedWave;
 
 	for(uint32_t i = 0; i < SIZE; i++)
@@ -567,66 +277,11 @@ void OutputDriver::delaySet(uint8_t delayValue)
 		//uint32_t holdNewValue = 0;
 		shiftedWave.dequeue(&delayOutWave[i]);
 	}
-/*
-	switch(signal.delay)
-	{
-		case 0:
-		{
 
-			break;
-		}
-
-		case 1:
-		{
-
-			break;
-		}
-
-		case 2:
-		{
-
-			break;
-		}
-
-		case 3:
-		{
-
-			break;
-		}
-
-		case 4:
-		{
-
-			break;
-		}
-
-		case 5:
-		{
-
-			break;
-		}
-
-		case 6:
-		{
-
-			break;
-		}
-
-		case 7:
-		{
-			break;
-		}
-
-		default:
-			break;
-
-	}
-	*/
 	return;
 }
 
 //Wave generation
-
 void OutputDriver::generateWave()
 {
 	if(shape == sine)

@@ -6,103 +6,17 @@
  */
 #include "main.h"
 #include <cstdint>
-
 #include "stm32l4xx_hal.h"
+#include "stm32l4xx_ll_i2c.h"
+
+//custom includes
 #include "SSD1306_I2C_Driver.h"
 #include "characters.h"
 #include "displayQueue.h"
 
 
-//TEST for Display
-	/*
-	displayQueue OLED_Queue1;
-	displayQueue OLED_Queue2;
-
-	OutputDriver Channel1 = OutputDriver(1,&OLED_Queue1);
-	OutputDriver Channel2 = OutputDriver(2,&OLED_Queue2);
-
-	OLED display1 = OLED(1,&OLED_Queue1);
-	OLED display2 = OLED(2,&OLED_Queue2);
-
-	waveProp signal1;
-	signal1.amplitude = 2;
-	signal1.frequency = 750;
-	signal1.type = sine;
-	signal1.delay = 0;
-
-	waveProp signal2;
-	signal2.amplitude = 1;
-	signal2.frequency = 500;
-	signal2.type = square;
-	signal2.delay = 0;
-
-
-	Channel1.update_Channel(signal1, Channel1);
-	Channel2.update_Channel(signal2, Channel1);
-
-
-	uint32_t count_s = 1;
-	uint32_t count_2s = (2 * 1);
-	uint32_t count_4s = (2 * 1);
-
-	while(1)
-	{
-
-		if(!count_s)
-		{
-			Channel1.update_Channel(signal1, Channel1);
-			Channel2.update_Channel(signal2, Channel1);
-
-			display1.updateDisplay();
-			display2.updateDisplay();
-
-			count_2s--;
-			count_s = 1;
-		}
-
-		if(!count_2s)
-		{
-			if(signal1.frequency > 1000)
-				signal1.frequency = 0;
-			else
-				signal1.frequency++;
-
-			if(signal2.frequency > 1000)
-				signal2.frequency = 0;
-			else
-				signal2.frequency++;
-
-			count_4s--;
-			count_2s = (2 * 1);
-		}
-
-		if(!count_4s)
-		{
-			if(signal1.type == pulse)
-				signal1.type = sine;
-
-			else if(signal1.type == sine)
-				signal1.type = square;
-
-			else if(signal1.type == square)
-				signal1.type = pulse;
-
-			if(signal2.type == pulse)
-				signal2.type = sine;
-
-			else if(signal2.type == sine)
-				signal2.type = square;
-
-			else if(signal2.type == square)
-				signal2.type = pulse;
-
-			count_4s = (2 * 1);
-		}
-		count_s--;
-*/
-
-OLED::OLED(uint8_t chann,displayQueue* q){ // @suppress("Class members should be properly initialized")
-	queue = q;
+OLED::OLED(uint8_t chann,displayQueue* dQ){ // @suppress("Class members should be properly initialized")
+	queue = dQ;
 	channel = chann;
 	startUpF = false;
 	startUpW = false;
@@ -455,7 +369,6 @@ void OLED::updateDisplay()
 
 		}
 
-
 		switch(waveFreq[3])
 		{
 			case 0:
@@ -778,6 +691,250 @@ void OLED::updateDisplay()
 
 	}
 
+	else
+	{
+		switch(waveFreq[0])
+		{
+			case 0:
+			{
+				set_partial_code(blank,0);
+				break;
+			}
+			case 1:
+			{
+				set_partial_code(one,0);
+				break;
+			}
+
+			default:
+			{
+				set_partial_code(blank,0);
+				break;
+			}
+
+		}
+
+		switch(waveFreq[1])
+		{
+			case 0:
+			{
+				if(waveFreq[0] == 0)
+				{
+					set_partial_code(blank,1);
+					break;
+				}
+				else
+				{
+					set_partial_code(zero,1);
+					break;
+				}
+
+			}
+			case 1:
+			{
+
+				set_partial_code(one,1);
+				break;
+			}
+			case 2:
+			{
+
+				set_partial_code(two,1);
+				break;
+			}
+			case 3:
+			{
+
+				set_partial_code(three,1);
+				break;
+			}
+			case 4:
+			{
+
+				set_partial_code(four,1);
+				break;
+			}
+			case 5:
+			{
+
+				set_partial_code(five,1);
+				break;
+			}
+			case 6:
+			{
+
+				set_partial_code(six,1);
+				break;
+			}
+			case 7:
+			{
+
+				set_partial_code(seven,1);
+				break;
+			}
+			case 8:
+			{
+
+				set_partial_code(eight,1);
+				break;
+			}
+			case 9:
+			{
+
+				set_partial_code(nine,1);
+				break;
+			}
+
+			default:
+			{
+				set_partial_code(blank,1);
+				break;
+			}
+
+		}
+
+		switch(waveFreq[2])
+		{
+			case 0:
+			{
+				if(waveFreq[1] == 0 && waveFreq[0] == 0)
+				{
+					set_partial_code(blank,2);
+					break;
+				}
+
+				set_partial_code(zero,2);
+				break;
+			}
+			case 1:
+			{
+				set_partial_code(one,2);
+				break;
+			}
+			case 2:
+			{
+				set_partial_code(two,2);
+				break;
+			}
+			case 3:
+			{
+				set_partial_code(three,2);
+				break;
+			}
+			case 4:
+			{
+				set_partial_code(four,2);
+				break;
+			}
+			case 5:
+			{
+				set_partial_code(five,2);
+				break;
+			}
+			case 6:
+			{
+				set_partial_code(six,2);
+				break;
+			}
+			case 7:
+			{
+				set_partial_code(seven,2);
+				break;
+			}
+			case 8:
+			{
+				set_partial_code(eight,2);
+				break;
+			}
+			case 9:
+			{
+				set_partial_code(nine,2);
+				break;
+			}
+
+			default:
+			{
+				set_partial_code(blank,2);
+				break;
+			}
+
+		}
+
+
+		switch(waveFreq[3])
+		{
+			case 0:
+			{
+				set_partial_code(zero,3);
+				break;
+			}
+			case 1:
+			{
+				set_partial_code(one,3);
+				break;
+			}
+			case 2:
+			{
+				set_partial_code(two,3);
+				break;
+			}
+			case 3:
+			{
+				set_partial_code(three,3);
+				break;
+			}
+			case 4:
+			{
+				set_partial_code(four,3);
+				break;
+			}
+			case 5:
+			{
+				set_partial_code(five,3);
+				break;
+			}
+			case 6:
+			{
+				set_partial_code(six,3);
+				break;
+			}
+			case 7:
+			{
+				set_partial_code(seven,3);
+				break;
+			}
+			case 8:
+			{
+				set_partial_code(eight,3);
+				break;
+			}
+			case 9:
+			{
+				set_partial_code(nine,3);
+				break;
+			}
+
+			default:
+			{
+				set_partial_code(blank,3);
+				break;
+			}
+
+		}
+		startUpF = true;
+
+		if(channel == 1)
+		{
+			updateChannel_1();
+		}
+
+		if(channel == 2)
+		{
+			updateChannel_2();
+		}
+
+
+	}
 
 	if(storedValues.type != dValue.type && startUpW == true)
 	{
@@ -865,6 +1022,52 @@ void OLED::updateDisplay()
 		{
 			updateChannel_2();
 		}
+
+	}
+
+	else
+	{
+		switch(storedValues.type)
+		{
+			case sine:
+			{
+				set_partial_code(SINE1,4);
+				set_partial_code(SINE2,5);
+				break;
+			}
+			case square:
+			{
+				set_partial_code(SQUARE,4);
+				set_partial_code(SQUARE,5);
+				break;
+			}
+			case pulse:
+			{
+				set_partial_code(PULSE,4);
+				set_partial_code(PULSE,5);
+				break;
+			}
+			case delay:
+			{
+				set_partial_code(D,4);
+				set_partial_code(D,5);
+				break;
+			}
+			default:
+				break;
+		}
+		startUpW = true;
+
+		if(channel == 1)
+		{
+			updateChannel_1();
+		}
+
+		if(channel == 2)
+		{
+			updateChannel_2();
+		}
+
 
 	}
 
@@ -1034,4 +1237,9 @@ void OLED::clearChannel_2()
 	send_data(blank);
 
 	return;
+}
+
+void OLED::I2C_Initialize()
+{
+
 }

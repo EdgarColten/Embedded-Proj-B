@@ -82,6 +82,8 @@ public:
 
 	void updateDisplay();
 
+	void I2C_Initialize();
+
 };
 
 #endif /* INC_SSD1306_I2C_DRIVER_H_ */
