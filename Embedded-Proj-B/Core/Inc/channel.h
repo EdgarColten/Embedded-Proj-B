@@ -10,6 +10,10 @@
 
 class Channel{
 	waveProp myWaveProp;
+	uint8_t shapeCount;
+	uint8_t freqCount;
+	uint8_t ampCount;
+	int8_t delayCount;
 public:
 	void setWaveType(uint8_t);
 	void setFreq(uint8_t);
