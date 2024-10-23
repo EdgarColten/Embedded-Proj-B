@@ -4,6 +4,7 @@
  *  Created on: Sep 29, 2024
  *      Author: LogMa
  */
+#include <cstdint>
 
 #ifndef INC_CPP_MAIN_H_
 #define INC_CPP_MAIN_H_
