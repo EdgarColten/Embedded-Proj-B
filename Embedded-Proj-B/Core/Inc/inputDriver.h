@@ -22,7 +22,7 @@ public:
     int8_t pinNumB;
     //Functions
     inputDriver(GPIO_TypeDef* , GPIO_TypeDef* ,uint8_t,uint8_t);
-    int8_t edgeDetector();
+    uint32_t edgeDetector();
 };
 
 #endif /* INPUTDRIVER_H_ */

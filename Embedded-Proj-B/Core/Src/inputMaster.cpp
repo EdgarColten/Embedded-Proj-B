@@ -12,10 +12,10 @@ inputMaster::inputMaster() {
 	// TODO Auto-generated constructor stub
 
 }
-nextState inputMaster::masterGet(int8_t kF, int8_t kA, int8_t kD, int8_t btn){
-	nState.knobF = kF;
-	nState.knobA = kA;
-	nState.knobD = kD;
-	nState.btn = btn;
-	return nState;
+waveProp inputMaster::masterGet(uint32_t kF, uint32_t kA, uint32_t kD, wave kT){
+	wProp.frequency = kF;
+	wProp.amplitude = kA;
+	wProp.delay = kD;
+	wProp.type = kT;
+	return wProp;
 }
