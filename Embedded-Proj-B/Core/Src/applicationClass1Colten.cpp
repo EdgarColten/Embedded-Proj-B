@@ -11,27 +11,27 @@
 #include "cpp_main.h"
 #include "Queue.h"
 
-
-#define ARRAY_SIZE 4
-
 extern "C" void cpp_main(void);
 
 class Channel { // @suppress("Miss copy constructor or assignment operator")
 private:
-	Queue* queue;
-
 	//Might be able to be replaced with a Queue*
-	int8_t queueCount = 0;
-	int8_t qHead = 0;
-	int8_t qTail = 0;
-
 	waveProp myWaveProp;
-	waveProp channelQueue[ARRAY_SIZE];
+	uint8_t shapeCount = 0;
+	uint8_t freqCount = 0;
+	uint8_t ampCount = 0;
+	int8_t delayCount = 0;
 
 public:
 
 	void setWaveType(uint8_t val){
-		uint8_t shapeCount = 0;
+		if(shapeCount < 3 && val > 0){
+			shapeCount = shapeCount + val;
+		}
+		else if(shapeCount > 0 && val < 0){
+			shapeCount = shapeCount + val;
+		}
+
 		switch(shapeCount){
 
 		case 0:
@@ -47,6 +47,9 @@ public:
 			myWaveProp.type = pulse;
 			break;
 
+		case 3:
+			myWaveProp.type = delay;
+			break;
 		default:
 			break;
 		return;
@@ -54,25 +57,44 @@ public:
 	}
 
 	void setFreq(uint8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
-		myWaveProp.frequency = myWaveProp.frequency + val;
-		return;
+		if(freqCount < 20 && val > 0){
+			freqCount = freqCount + val;
+		}
+		else if(freqCount > 0 && val < 0){
+			freqCount = freqCount + val;
+		}
+
+		if(freqCount == 0){
+			myWaveProp.frequency = 1;
+		}
+		else{
+			myWaveProp.frequency = 50*freqCount;
+		}
+			return;
+
 	}
 
 	void setAmp(uint8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
-		myWaveProp.amplitude = myWaveProp.amplitude + val;
+		if(ampCount < 33 && val > 0){
+			ampCount = ampCount + val;
+		}
+		else if(ampCount > 0 && val < 0){
+			ampCount = ampCount + val;
+		}
+		myWaveProp.amplitude = (ampCount * 0.1) + 0.1;
+
 		return;
 	}
 
 	void setDelay(uint8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
-		int8_t delayCount = 0;
 		if(val>0 && delayCount<7){
-			myWaveProp.delay = myWaveProp.delay + val;
-			delayCount++;
+			delayCount = delayCount + val;
 	}
 		else if(val<0 && delayCount>0){
-			myWaveProp.delay = myWaveProp.delay + val;
-			delayCount--;
+			delayCount = delayCount + val;
 		}
+
+		myWaveProp.amplitude = (delayCount/8) * 256;
 		return;
 	}
 
@@ -83,30 +105,6 @@ public:
 		myWaveProp.delay = x.delay;
 	}
 
-	void enqueueWave(waveProp sentStruct){
-
-		if(qTail>ARRAY_SIZE){
-			qTail = 0;
-		}
-
-		if(queueCount<ARRAY_SIZE){
-			channelQueue[qTail] = sentStruct;
-			qTail++;
-		}
-
-		return;
-	}
-
-	waveProp dequeueWave(){ //this needs to be a pointer so that there isn't any direct interaction between modules
-		waveProp sendingStruct;
-		sendingStruct = channelQueue[qHead];
-		qHead++;
-		if(qHead>ARRAY_SIZE){
-			qHead = 0;
-		}
-
-		return sendingStruct;
-	}
 };
 
 
