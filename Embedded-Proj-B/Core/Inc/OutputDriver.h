@@ -27,23 +27,23 @@
 class OutputDriver{ // @suppress("Miss copy constructor or assignment operator")
 private:
 
-	displayQueue* queue;
+	//IPC attributes
+	displayQueue* oledQueue;
+	//waveQueue* signalQueue;
+
 
 	//Core attributes
 	uint32_t freq;
 	uint32_t amp;
+	uint32_t offset;
 	uint32_t autoReload;
 	uint8_t channel;
 
-	//Generation checks
-	bool updateSine;
-	bool updateSquare;
-	bool updatePulse;
-	bool updateDelay;
 
 	//Output wave tables
 	uint32_t outWave[SIZE];
 	uint32_t delayOutWave[SIZE];
+
 	//Setting wave type
 	enum waveType shape; //delay is only for channel 2
 
@@ -61,7 +61,9 @@ public:
 	void generateWave();
 	void setAutoReload(TIM_HandleTypeDef*);
 
-	void delaySet(uint8_t);
+	void delaySet();
+
+	void pack();
 
 };
 
