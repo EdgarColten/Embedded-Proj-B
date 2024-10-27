@@ -6,14 +6,16 @@
  */
 /*
  * JPL rules demonstrated (Logan)
+ * Level 1:
+ *  -Rule 1: Stick to language definition (ISO 11 for C and C++) DONE (show settings to display)
+ *  -Rule 2: -WALL DONE (show settings to display)
  * Level 3:
- * 	-Rule 16: The use of Assertions.
- * 	-Rule :
+ * 	-Rule 16: The use of Assertions. TODO
  * 	-Rule :
  * Level 4:
- * 	-Rule 21: Macros shall not be #define'd within a function or a block.
- * 	-Rule 22: #undef shall not be used.
- * 	-Rule 31: #include directives in a file shall only be preceded by other preprocessor directives or comments.
+ * 	-Rule 21: Macros shall not be #define'd within a function or a block. TODO (display by using ctrl + f and looking up #define)
+ * 	-Rule 22: #undef shall not be used. TODO (display by using ctrl + f and looking up #undef)
+ * 	-Rule 31: #include directives in a file shall only be preceded by other preprocessor directives or comments. TODO
  */
 
 #include <cstdint>
@@ -115,7 +117,6 @@ OutputDriver::OutputDriver(uint8_t chan, waveQueue* wQ, displayQueue* dQ) // @su
 	shape = sine;
 	autoReload = 2731;
 	channel = chan;
-
 }
 
 
@@ -124,8 +125,6 @@ void OutputDriver::setAutoReload(TIM_HandleTypeDef* timer)
 {
 
 	//TODO: improve tests and assertions
-
-
     (timer)->Instance->ARR = (autoReload);
     (timer)->Init.Period = (autoReload);
 	return;
@@ -163,19 +162,42 @@ void OutputDriver::getAttributes(waveProp* dataPoll)
 	return;
 }
 
-void OutputDriver::update_Channel(waveProp signal, OutputDriver channel1) //TODO: take out struct and just use queue attribute
+void OutputDriver::update_Channel(OutputDriver channel1) //TODO: take out struct and just use queue attribute
 {
-	//waveProp signal;
-	//signalQueue.dequeue(&signal);
+	waveProp signal;
+
+	//sanity check
+	assert(signalQueue != nullptr);
+
+	bool notEmpty = signalQueue->dequeue(&signal);
+	//checking that there are values to dequeue
+
+	if(notEmpty == false)
+		return;
+
+
+	////////////////////Testing dequeued value//////////////////////
+	if((signal.frequency > 0 && signal.frequency <= 1000) && (signal.amplitude > 0 && signal.amplitude < 4096) && (signal.type >= 0 && signal.type < 4) && (signal.delay >= 0 && signal.delay < 8))
+	{
+		GPIOA->ODR |= (1 << 3);// PA_3
+		GPIOA->ODR &= ~(0 << 1); //PA_1
+	}
+
+	else
+	{
+		GPIOA->ODR |= (1 << 1); //PA_1
+		GPIOA->ODR &= ~(1 << 3);// PA_3
+
+		return;
+	}
+	////////////////////Testing dequeued value//////////////////////
+
+
 	if((freq != signal.frequency || amp != signal.amplitude || shape != signal.type) && signal.type != delay)
 	{
 		if(channel == 1)
 		{
-			waveProp testSignal;
-			testSignal.amplitude = -1;
-			testSignal.frequency = 0;
-
-			setAttributes(testSignal);
+			setAttributes(signal);
 			calculateAutoReload();
 
 			setAutoReload(&htim2);
@@ -183,6 +205,8 @@ void OutputDriver::update_Channel(waveProp signal, OutputDriver channel1) //TODO
 
 			HAL_TIM_Base_Start(&htim2);
 			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave, SIZE, DAC_ALIGN_12B_R);
+
+			assert(oledQueue != nullptr);
 
 			pack();
 			oledQueue->enqueue(dValues);
@@ -192,6 +216,7 @@ void OutputDriver::update_Channel(waveProp signal, OutputDriver channel1) //TODO
 
 		else if(channel == 2)
 		{
+
 			setAttributes(signal);
 			calculateAutoReload();
 
@@ -201,8 +226,11 @@ void OutputDriver::update_Channel(waveProp signal, OutputDriver channel1) //TODO
 			HAL_TIM_Base_Start(&htim6);
 			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
 
+			assert(oledQueue != nullptr);
+
 			pack();
 			oledQueue->enqueue(dValues);
+
 
 			return;
 		}
@@ -215,6 +243,7 @@ void OutputDriver::update_Channel(waveProp signal, OutputDriver channel1) //TODO
 
 		if(freq != data.frequency || amp != data.amplitude || shape != data.type || offset != signal.delay)
 		{
+
 			offset = signal.delay;
 			setAttributes(data);
 
@@ -238,8 +267,9 @@ void OutputDriver::update_Channel(waveProp signal, OutputDriver channel1) //TODO
 				delaySet();
 				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave, SIZE, DAC_ALIGN_12B_R);
 				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, delayOutWave, SIZE, DAC_ALIGN_12B_R);
-
 			}
+			assert(oledQueue != nullptr);
+
 			pack();
 			oledQueue->enqueue(dValues);
 			return;
@@ -263,24 +293,33 @@ void OutputDriver::pack()
 void OutputDriver::delaySet()
 {
 	uint32_t shift = offset * PHASE_SHIFT;
+	assert(shift >= 0);
+
 	Queue shiftedWave;
 
 	for(uint32_t i = 0; i < SIZE; i++)
 	{
-		shiftedWave.enqueue(outWave[i]);
+		assert(shiftedWave.enqueue(outWave[i]) == true);
+		if(outWave[i] >= 0 && outWave[i] < 4095)
+		{
+			GPIOB->ODR |= (1 << 3); //PB_3
+		}
+		else
+			GPIOB->ODR &= ~(1 << 3); //PB_3
 	}
 
 	for(uint32_t i = 0; i < shift; i++)
 	{
 		uint32_t hold = 0;
 		shiftedWave.dequeue(&hold);
+		assert(hold >= 0);
 		shiftedWave.enqueue(hold);
 	}
 
 	for(uint32_t i = 0; i < SIZE; i++)
 	{
 		//uint32_t holdNewValue = 0;
-		shiftedWave.dequeue(&delayOutWave[i]);
+		assert(shiftedWave.dequeue(&delayOutWave[i]) == true);
 	}
 
 	return;
@@ -291,10 +330,9 @@ void OutputDriver::generateWave()
 {
 	if(shape == sine)
 	{
-		uint32_t amplifier = amp * 1220; //1215 = 1V
 		for(uint32_t i = 0; i < SIZE; i++)
 		{
-			outWave[i] =  ((sin(i*(2*PI)/SIZE) + 1) * (amplifier/2)); //TODO:find a way to avoid division
+			outWave[i] =  ((sin(i*(2*PI)/SIZE) + 1) * (amp/2)); //TODO:find a way to avoid division
 		}
 		return;
 	}
@@ -309,7 +347,7 @@ void OutputDriver::generateWave()
 			}
 			else
 			{
-				outWave[i] = amp * 1215; //1215 = 1 volt
+				outWave[i] = amp; //1215 = 1 volt
 				if(outWave[i] > (MAX_SIZE - 1))
 				{
 					outWave[i] = (MAX_SIZE - 1);
@@ -327,7 +365,7 @@ void OutputDriver::generateWave()
 		{
 			if((i%10) == 0 && i != 0) //TODO:find a way to avoid division
 			{
-				outWave[i] = amp * 1215; //1215 = 1 volt
+				outWave[i] = amp; //1215 = 1 volt
 			}
 			else
 				outWave[i] = 0;
