@@ -105,7 +105,7 @@ void Channel::setAmp(int8_t val){ //when incrementing and decrementing this freq
 			ampCount = ampCount + -1;
 		}
 		myWaveProp.amplitude = ((ampCount * 0.1) + 0.1) * 1215;
-
+		//3.3/4095
 		return;
 	}
 
@@ -121,6 +121,12 @@ void Channel::setDelay(int8_t val){ //when incrementing and decrementing this fr
 		return;
 	}
 
+void Channel::updateCh(nextState ns){
+	setFreq(ns.knobF);
+	setAmp(ns.knobA);
+	setDelay(ns.knobD);
+	setShape(ns.knobS);
+}
 /*
 void Channel::cpChannel(waveProp x){ //x is ch1 so the delay value should be 0. This may not give the correct delay
 		myWaveProp.type = x.type;
