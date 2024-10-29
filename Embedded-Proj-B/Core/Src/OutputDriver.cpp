@@ -49,8 +49,11 @@ extern TIM_HandleTypeDef htim6;
 	displayQueue OLED_Queue1;
 	displayQueue OLED_Queue2;
 
-	OutputDriver Channel1 = OutputDriver(1,&OLED_Queue1);
-	OutputDriver Channel2 = OutputDriver(2,&OLED_Queue2);
+	waveQueue waveQueue1;
+	waveQueue waveQueue2;
+
+	OutputDriver Channel1 = OutputDriver(1,&waveQueue1,&OLED_Queue1);
+	OutputDriver Channel2 = OutputDriver(2,&waveQueue2,&OLED_Queue2);
 
 	OLED display1 = OLED(1,&OLED_Queue1);
 	OLED display2 = OLED(2,&OLED_Queue2);
@@ -98,12 +101,14 @@ extern TIM_HandleTypeDef htim6;
 	Channel2.update_Channel(signal2, Channel1);
 	display2.updateDisplay();
 
+
 */
 
 
-OutputDriver::OutputDriver(uint8_t chan,displayQueue* dQ) // @suppress("Class members should be properly initialized")
+OutputDriver::OutputDriver(uint8_t chan, waveQueue* wQ, displayQueue* dQ) // @suppress("Class members should be properly initialized")
 {
 	oledQueue = dQ;
+	signalQueue = wQ;
 	freq = 1;
 	amp = 1;
 	offset = 0;

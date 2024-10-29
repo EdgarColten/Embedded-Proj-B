@@ -13,6 +13,7 @@
 #include "cpp_main.h"
 #include "displayQueue.h"
 #include "Queue.h"
+#include "waveQueue.h"
 
 #ifndef INC_OUTPUTDRIVER_H_
 #define INC_OUTPUTDRIVER_H_
@@ -29,7 +30,7 @@ private:
 
 	//IPC attributes
 	displayQueue* oledQueue;
-	//waveQueue* signalQueue;
+	waveQueue* signalQueue;
 
 
 	//Core attributes
@@ -52,7 +53,7 @@ private:
 
 
 public:
-	OutputDriver(uint8_t,displayQueue*);
+	OutputDriver(uint8_t,waveQueue*,displayQueue*);
 	void update_Channel(waveProp,OutputDriver);
 	void calculateAutoReload();
 

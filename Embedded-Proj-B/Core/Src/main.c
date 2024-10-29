@@ -45,14 +45,13 @@ DMA_HandleTypeDef hdma_dac_ch1;
 DMA_HandleTypeDef hdma_dac_ch2;
 
 I2C_HandleTypeDef hi2c1;
-
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim6;
 
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+I2C_TypeDef I2C;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
