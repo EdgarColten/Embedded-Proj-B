@@ -20,16 +20,16 @@ private:
 	uint8_t shapeCount = 0;
 	uint8_t freqCount = 0;
 	uint8_t ampCount = 0;
-	int8_t delayCount = 0;
+	uint8_t delayCount = 0;
 
 public:
 
-	void setWaveType(uint8_t val){
+	void setWaveType(int8_t val){
 		if(shapeCount < 3 && val > 0){
-			shapeCount = shapeCount + val;
+			shapeCount = shapeCount + 1;
 		}
 		else if(shapeCount > 0 && val < 0){
-			shapeCount = shapeCount + val;
+			shapeCount = shapeCount - 1;
 		}
 
 		switch(shapeCount){
@@ -56,12 +56,12 @@ public:
 		}
 	}
 
-	void setFreq(uint8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
+	void setFreq(int8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
 		if(freqCount < 20 && val > 0){
-			freqCount = freqCount + val;
+			freqCount = freqCount + 1;
 		}
 		else if(freqCount > 0 && val < 0){
-			freqCount = freqCount + val;
+			freqCount = freqCount - 1;
 		}
 
 		if(freqCount == 0){
@@ -74,24 +74,24 @@ public:
 
 	}
 
-	void setAmp(uint8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
+	void setAmp(int8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
 		if(ampCount < 33 && val > 0){
-			ampCount = ampCount + val;
+			ampCount = ampCount + 1;
 		}
 		else if(ampCount > 0 && val < 0){
-			ampCount = ampCount + val;
+			ampCount = ampCount + -1;
 		}
-		myWaveProp.amplitude = (ampCount * 0.1) + 0.1;
+		myWaveProp.amplitude = ((ampCount * 0.1) + 0.1) * 1215;
 
 		return;
 	}
 
-	void setDelay(uint8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
+	void setDelay(int8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
 		if(val>0 && delayCount<7){
-			delayCount = delayCount + val;
+			delayCount = delayCount + 1;
 	}
 		else if(val<0 && delayCount>0){
-			delayCount = delayCount + val;
+			delayCount = delayCount - 1;
 		}
 
 		myWaveProp.amplitude = (delayCount/8) * 256;
