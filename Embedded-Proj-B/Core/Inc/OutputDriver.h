@@ -43,10 +43,15 @@ private:
 
 	//Output wave tables
 	uint32_t outWave[SIZE];
+	uint32_t sineWave[SIZE];
+	uint32_t squareWave[SIZE];
+	uint32_t pulseWave[SIZE];
 	uint32_t delayOutWave[SIZE];
 
 	//Setting wave type
 	enum waveType shape; //delay is only for channel 2
+
+
 
 	//packing values for the display
 	displayValues dValues;
@@ -54,7 +59,7 @@ private:
 
 public:
 	OutputDriver(uint8_t,waveQueue*,displayQueue*);
-	void update_Channel(waveProp,OutputDriver);
+	void update_Channel(OutputDriver);
 	void calculateAutoReload();
 
 	void setAttributes(waveProp);

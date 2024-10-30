@@ -28,6 +28,15 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l4xx_hal.h"
+#include "stm32l4xx_ll_system.h"
+#include "stm32l4xx_ll_gpio.h"
+#include "stm32l4xx_ll_exti.h"
+#include "stm32l4xx_ll_bus.h"
+#include "stm32l4xx_ll_cortex.h"
+#include "stm32l4xx_ll_rcc.h"
+#include "stm32l4xx_ll_utils.h"
+#include "stm32l4xx_ll_pwr.h"
+#include "stm32l4xx_ll_dma.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -57,18 +66,28 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define MCO_Pin GPIO_PIN_0
+#define MCO_Pin LL_GPIO_PIN_0
 #define MCO_GPIO_Port GPIOA
-#define VCP_TX_Pin GPIO_PIN_2
+#define VCP_TX_Pin LL_GPIO_PIN_2
 #define VCP_TX_GPIO_Port GPIOA
-#define SWDIO_Pin GPIO_PIN_13
+#define SPI_RST_Pin LL_GPIO_PIN_3
+#define SPI_RST_GPIO_Port GPIOA
+#define SPI_CS_Pin LL_GPIO_PIN_6
+#define SPI_CS_GPIO_Port GPIOA
+#define SSD1306_DC_Pin LL_GPIO_PIN_8
+#define SSD1306_DC_GPIO_Port GPIOA
+#define SWDIO_Pin LL_GPIO_PIN_13
 #define SWDIO_GPIO_Port GPIOA
-#define SWCLK_Pin GPIO_PIN_14
+#define SWCLK_Pin LL_GPIO_PIN_14
 #define SWCLK_GPIO_Port GPIOA
-#define VCP_RX_Pin GPIO_PIN_15
+#define VCP_RX_Pin LL_GPIO_PIN_15
 #define VCP_RX_GPIO_Port GPIOA
-#define LD3_Pin GPIO_PIN_3
+#define LD3_Pin LL_GPIO_PIN_3
 #define LD3_GPIO_Port GPIOB
+#define Signal_Pass_LED_Pin LL_GPIO_PIN_4
+#define Signal_Pass_LED_GPIO_Port GPIOB
+#define Signal_Fail_LED_Pin LL_GPIO_PIN_5
+#define Signal_Fail_LED_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
