@@ -1,17 +1,18 @@
 /*
- * SSD1306_I2C_Driver.cpp
+ * SSD1306_SPI_Driver.cpp
  *
- *  Created on: Sep 21, 2024
+ *  Created on: Oct 28, 2024
  *      Author: LogMa
  */
-/*
+
+
 #include "main.h"
 #include <cstdint>
 #include "stm32l4xx_hal.h"
-#include "stm32l4xx_ll_i2c.h"
+#include "stm32l4xx_ll_spi.h"
 
 //custom includes
-#include "SSD1306_I2C_Driver.h"
+#include "SSD1306_SPI_Driver.h"
 #include "characters.h"
 #include "displayQueue.h"
 
@@ -21,6 +22,9 @@ OLED::OLED(uint8_t chann,displayQueue* dQ){ // @suppress("Class members should b
 	channel = chann;
 	startUpF = false;
 	startUpW = false;
+	SPI_Count = 0;
+	SPI_CS_count = 0;
+	SPI_RST_Count = 0;
 
 	for(int32_t i = 0; i < 6; i++)
 	{
@@ -1078,22 +1082,95 @@ void OLED::updateDisplay()
 
 
 
-
 void OLED::send_command(uint8_t command)
 {
-    HAL_I2C_Mem_Write(&SSD1306_I2C_PORT,SSD1306_I2C_ADDR,0x00, 1, &command, 1, HAL_MAX_DELAY);
-    return;
+	LL_GPIO_ResetOutputPin(SSD1306_DC_GPIO_Port, SSD1306_DC_Pin);
+
+	if(SPI_Count == 0)
+	{
+		HAL_SPI_Transmit(&hspi1, &command, CHARACTER_SIZE, HAL_MAX_DELAY);
+		SPI_Count++;
+	}
+	else
+	{
+		LL_SPI_TransmitData8(hspi1.Instance, command);
+		while(LL_SPI_IsActiveFlag_TXE(hspi1.Instance)==0);
+	}
+
+	return;
 }
 
 void OLED::send_data(uint8_t* data)
 {
-	HAL_I2C_Mem_Write(&SSD1306_I2C_PORT, SSD1306_I2C_ADDR, 0x40, 1, data, CHARACTER_SIZE, HAL_MAX_DELAY);
+	LL_GPIO_SetOutputPin(SSD1306_DC_GPIO_Port, SSD1306_DC_Pin);
+
+	for(uint32_t i = 0; i < CHARACTER_SIZE; i++)
+	{
+		LL_SPI_TransmitData8(hspi1.Instance, data[i]);
+		while(LL_SPI_IsActiveFlag_TXE(hspi1.Instance)==0);
+	}
 	return;
 
 }
 
 void OLED::SSD1306_init()
 {
+	LL_SPI_Enable(SPI1);
+	if(SPI_RST_Count == 0)
+	{
+		LL_GPIO_SetOutputPin(SPI_RST_GPIO_Port, SPI_RST_Pin);
+		SPI_RST_Count = 1;
+	}
+
+	if(SPI_CS_count == 0)
+	{
+		LL_GPIO_ResetOutputPin(SPI_CS_GPIO_Port, SPI_CS_Pin);
+		SPI_CS_count = 1;
+	}
+
+	/*
+    send_command(SSD1306_COMMAND_DISPLAY_OFF); //set display off
+
+    send_command(SSD1306_COMMAND_ADDRESSING_MODE); //Set addressing mode
+    send_command(0x00); //horizontal addressing mode
+
+    send_command(SSD1306_COMMAND_SET_OFFSET); //Display offset
+    send_command(0x00); //no offset
+
+    send_command(SSD1306_COMMAND_START_LINE); //set display start line
+
+    send_command(SSD1306_COMMAND_CONTRAST_CONTROL);// set contrast
+    send_command(0xFF);//max contrast
+
+    send_command(SSD1306_COMMAND_SEG_INVERSE);//set segment remap, col address SEG0 = 127
+    send_command(0xA4);
+
+    send_command(SSD1306_COMMAND_SET_MUX); //set MUX Ratio
+    send_command(0x3F);
+
+    send_command(SSD1306_COMMAND_COM_SCAN_INVERSE); //set com scan mode, C8 = from COM[N - 1] to COM[0]
+
+    send_command(SSD1306_COMMAND_SET_COM_Hardware);  //set COM pins hardware configuration
+    send_command(0x12);
+
+    send_command(0xA4); //set output with RAM contents TODO make a define
+
+    send_command(SSD1306_COMMAND_SET_PRECHARGE_PERIOD); //set precharge value
+    send_command(0x22);
+
+    send_command(SSD1306_COMMAND_CLOCK_DIIVDER); //Set frequency (Tentatively)
+    send_command(0x80);
+
+    send_command(SSD1306_COMMAND_VCOMH_DSEL_LEVEL);//set vcomh
+    send_command(0x20); //0x20,0.77xVcc
+
+    send_command(SSD1306_COMMAND_SET_DC_DC_ENABLE);//set DC-DC enable
+    send_command(0x14);
+
+    send_command(SSD1306_COMMAND_DISPLAY_ON); //set display on
+    clear_display();
+    return;
+*/
     send_command(0xAE); //set display off
     send_command(0x20); //Set addressing mode
     send_command(0x00); //horizontal addressing mode
@@ -1133,7 +1210,10 @@ void OLED::SSD1306_init()
 
     send_command(0xAF); //set display on
     clear_display();
+
     return;
+    /**/
+
 }
 
 void OLED::set_column_address(uint8_t begin, uint8_t end)
@@ -1240,8 +1320,3 @@ void OLED::clearChannel_2()
 	return;
 }
 
-void OLED::I2C_Initialize()
-{
-
-}
-*/
