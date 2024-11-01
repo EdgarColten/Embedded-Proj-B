@@ -4,7 +4,7 @@
  *  Created on: Sep 19, 2024
  *      Author: LogMa
  */
-
+/*
 #include "stm32l4xx_hal.h"
 #include "stm32l4xx_it.h"
 #include <cstdint>
@@ -30,11 +30,12 @@ extern I2C_HandleTypeDef hi2c1;
 //I left shifted the ADDR by 1 because the list bit is the R/W# bit
 #define SSD1306_I2C_ADDR 0x78
 
-/*
+
 If D/C# pin is HIGH, D[7:0] is interpreted as display data written to Graphic Display Data RAM (GDDRAM).
 If it is LOW, the input at D[7:0] is interpreted as a command.
 Then data input will be decoded and written to the corresponding command register.
 */
+/*
 #define CHARACTER_SIZE 16
 #define SSD1306_SET_COLUMN_ADDR 0x21
 #define SSD1306_SET_PAGE_ADDR 0x22
@@ -86,4 +87,4 @@ public:
 
 };
 
-#endif /* INC_SSD1306_I2C_DRIVER_H_ */
+#endif  INC_SSD1306_I2C_DRIVER_H_ */

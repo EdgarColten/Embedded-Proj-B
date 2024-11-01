@@ -21,6 +21,13 @@
 // Prescalar = 0
 // Auto Reload = 2731 (100 Hz)
 //
+//
+// GPIO
+// PA_1
+// PA_3
+//
+// PB_1
+//
 ///////////////////////////////////////////////////////////////////
 
 
@@ -32,8 +39,12 @@
 #include "cpp_main.h"
 #include "Queue.h"
 #include "OutputDriver.h"
+//<<<<<<< main
+#include "SSD1306_SPI_Driver.h"
+//=======
 #include "SSD1306_I2C_Driver.h"
 #include "channel.h"
+//>>>>>>> Colten-Classes
 #include "waveQueue.h"
 #include "Semaphor.h"
 
@@ -49,7 +60,6 @@ void cpp_main(){
 //Test Cases for applicationClass1Colten
 		//S1.enqueue from timer interrupt
 		//(if not S1 dequeue) task1.update();
-
 
 	}
 }
