@@ -22,11 +22,11 @@
 // Auto Reload = 2731 (100 Hz)
 //
 //
-// GPIO
-// PA_1
-// PA_3
+// GPIO Pins:
+// PA_1 =
+// PA_3 =
 //
-// PB_1
+// PB_1 =
 //
 ///////////////////////////////////////////////////////////////////
 
@@ -70,8 +70,10 @@ extern "C" void myTIM7_IQRHandler(void)
 
 void cpp_main(){
 
+
 	while(1)
 	{
 
 	}
+
 }
