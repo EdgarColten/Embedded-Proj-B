@@ -44,16 +44,25 @@ Level 3:
 
 
 */
-waveProp Channel:: getMyWaveProp(void){
-	return myWaveProp;
+
+Channel::Channel(inputQueue* iQ, waveQueue* wQ) // @suppress("Class members should be properly initialized")
+{
+	shapeCount = 0;
+	freqCount = 0;
+	ampCount = 0;
+	delayCount = 0;
+	chanCount = 1;
+	Input_q = iQ;
+	Wave_q = wQ;
 }
 
 void Channel::setWaveType(int8_t val){
 		if(shapeCount < 3 && val > 0){
 			shapeCount = shapeCount + 1;
 		}
-		else if(shapeCount > 0 && val < 0){
-			shapeCount = shapeCount - 1;
+		else if(shapeCount == 3 && val > 0)
+		{
+			shapeCount = 0;
 		}
 
 		switch(shapeCount){
@@ -106,7 +115,7 @@ void Channel::setAmp(int8_t val){ //when incrementing and decrementing this freq
 			ampCount = ampCount + -1;
 		}
 		//Example of Rule 18 (Including () to ensure correct computation in correct order)
-		myWaveProp.amplitude = ((ampCount * 0.1) + 0.1) * 1215;
+		myWaveProp.amplitude = ((ampCount * 0.1) + 0.1) * 1240;
 		return;
 	}
 
@@ -118,15 +127,19 @@ void Channel::setDelay(int8_t val){ //when incrementing and decrementing this fr
 			delayCount = delayCount - 1;
 		}
 
-		myWaveProp.amplitude = delayCount;
+		myWaveProp.delay = delayCount;
 		return;
 	}
 
-void Channel::updateChannel(nextState ns){
+void Channel::updateChannel(){
+	nextState ns;
+	Input_q->dequeue(&ns);
 	setFreq(ns.knobF);
 	setAmp(ns.knobA);
 	setDelay(ns.knobD);
-	setWaveType(ns.knobS);
+	setWaveType(ns.btn_S);
+	myWaveProp.channel = ns.sw_select;
+	Wave_q->enqueue(myWaveProp);
 }
 
 /*

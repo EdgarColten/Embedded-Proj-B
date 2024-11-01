@@ -27,14 +27,15 @@ typedef struct{ //passed to the outputDriver for data collected by the input
 	uint32_t amplitude;
 	uint32_t delay;
 	wave type;
+	uint8_t channel;
 }waveProp;
 
 typedef struct{
 	int8_t knobF;
 	int8_t knobA;
 	int8_t knobD;
-	int8_t knobS;
-	int8_t btn;
+	int8_t btn_S;
+	int8_t sw_select;
 }nextState;
 
 #endif /* INC_CPP_MAIN_H_ */

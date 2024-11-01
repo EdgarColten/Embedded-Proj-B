@@ -12,11 +12,11 @@ inputMaster::inputMaster() {
 	// TODO Auto-generated constructor stub
 
 }
-nextState inputMaster::masterGet(int8_t kF, int8_t kA, int8_t kD, int8_t kS, int8_t kBtn){
+nextState inputMaster::masterGet(int8_t kF, int8_t kA, int8_t kD, int8_t SBtn, int8_t sw_sel){
 	nState.knobF = kF;
 	nState.knobA = kA;
 	nState.knobD = kD;
-	nState.knobS = kS;
-	nState.btn = kBtn;
+	nState.btn_S = SBtn;
+	nState.sw_select = sw_sel;
 	return nState;
 }
