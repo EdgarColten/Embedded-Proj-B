@@ -42,8 +42,8 @@
 #include "SSD1306_SPI_Driver.h"
 #include "waveQueue.h"
 
-extern "C" void cpp_main(void);
 
+extern "C" void cpp_main(void);
 
 void cpp_main(){
 
