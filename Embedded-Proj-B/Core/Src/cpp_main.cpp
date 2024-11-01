@@ -51,22 +51,22 @@
 
 static Semaphor values;
 
+extern TIM_HandleTypeDef htim7;
+
 extern "C" void cpp_main(void);
 
-/*
+   //Worked with Olivia C
 extern "C" void myTIM7_IQRHandler(void)
 {
-	if(__HAL_TIM_GET_FLAG(&htim7,TIM_FLAG_UPDATE) != RESET)
+	if(__HAL_TIM_GET_FLAG(&htim7,TIM_FLAG_UPDATE))
 	{
-		if(__HAL_TIME_GET_IT_SOURCE(&htim7, TIM_IT_UPDATE) != RESET)
+		if(__HAL_TIM_GET_IT_SOURCE(&htim7, TIM_IT_UPDATE) != 0)
 		{
-			__HAL_TIME_CLEAR_IT(&htim7,TIM_IT_UPDATE);
+			__HAL_TIM_CLEAR_IT(&htim7,TIM_IT_UPDATE);
 			values.enqueue(1);
 		}
 	}
 }
-*/
-
 
 void cpp_main(){
 

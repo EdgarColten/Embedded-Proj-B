@@ -119,7 +119,7 @@ int main(void)
   MX_TIM6_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_TIM_Base_Start_IT(&htim7);
   /* USER CODE END 2 */
   //Starting Timer 7 for sempahore
 //  HAL_TIME_Base_start_IT(&htim7);
