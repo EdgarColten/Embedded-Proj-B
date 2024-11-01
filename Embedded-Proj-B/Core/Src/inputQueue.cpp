@@ -42,11 +42,11 @@ bool inputQueue::dequeue(nextState *msg){ //works with the head
             buffer[n] = buffer[n+1];
         }*/
         nextState clear;
-        clear.btn = 0;
+        clear.btn_S = 0;
         clear.knobA = 0;
         clear.knobD = 0;
         clear.knobF = 0;
-
+        clear.sw_select = 1;
 
         buffer[head] = clear;
 

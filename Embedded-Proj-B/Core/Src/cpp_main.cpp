@@ -39,12 +39,8 @@
 #include "cpp_main.h"
 #include "Queue.h"
 #include "OutputDriver.h"
-//<<<<<<< main
 #include "SSD1306_SPI_Driver.h"
-//=======
-#include "SSD1306_I2C_Driver.h"
 #include "channel.h"
-//>>>>>>> Colten-Classes
 #include "waveQueue.h"
 #include "Semaphor.h"
 
@@ -53,7 +49,6 @@ static Semaphor values;
 
 extern TIM_HandleTypeDef htim7;
 
-extern "C" void cpp_main(void);
 
    //Worked with Olivia C
 extern "C" void myTIM7_IQRHandler(void)
@@ -68,8 +63,48 @@ extern "C" void myTIM7_IQRHandler(void)
 	}
 }
 
-void cpp_main(){
+extern "C" void cpp_main();
 
+void cpp_main()
+{
+	inputQueue inputC1;
+	inputQueue inputC2;
+
+	displayQueue OLED_Queue1;
+	displayQueue OLED_Queue2;
+
+	waveQueue waveQueue1;
+	waveQueue waveQueue2;
+
+	nextState ns1;
+	ns1.sw_select = 0; //channel 1
+    ns1.knobA = 0; //amplitude = 0.2
+    ns1.knobF = 0; //frequency = 50 Hz
+    ns1.knobD = 0; //N/A
+    ns1.btn_S = 0; //shape = square
+/*
+    nextState ns2;
+	ns1.sw_select = 2;
+	ns1.knobA = 0;
+	ns1.knobF = 1;
+	ns1.knobD = 1;
+	ns1.btn_S = 1;
+*/
+	Channel channel1 = Channel(&inputC1,&waveQueue1);
+	//Channel channel2 = Channel(&inputC2,&waveQueue2);
+
+	OutputDriver signal1 = OutputDriver(1,&waveQueue1,&OLED_Queue1);
+	//OutputDriver signal2 = OutputDriver(2,&waveQueue2,&OLED_Queue2);
+
+	OLED display1 = OLED(1,&OLED_Queue1);
+	//OLED display2 = OLED(2,&OLED_Queue2);
+
+	inputC1.enqueue(ns1);
+
+	channel1.updateChannel();
+
+	signal1.update_Channel(signal1);
+	display1.updateDisplay();
 
 	while(1)
 	{
