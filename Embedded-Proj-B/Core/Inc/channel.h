@@ -22,6 +22,7 @@ public:
 	void setFreq(int8_t);
 	void setAmp(int8_t);
 	void setDelay(int8_t);
+	void updateChannel(nextState);
 //	void cpChannel(waveProp);
 };
 
