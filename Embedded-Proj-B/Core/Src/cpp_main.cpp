@@ -21,6 +21,13 @@
 // Prescalar = 0
 // Auto Reload = 2731 (100 Hz)
 //
+//
+// GPIO
+// PA_1
+// PA_3
+//
+// PB_1
+//
 ///////////////////////////////////////////////////////////////////
 
 
@@ -32,7 +39,7 @@
 #include "cpp_main.h"
 #include "Queue.h"
 #include "OutputDriver.h"
-#include "SSD1306_I2C_Driver.h"
+#include "SSD1306_SPI_Driver.h"
 #include "waveQueue.h"
 
 extern "C" void cpp_main(void);
@@ -42,7 +49,6 @@ void cpp_main(){
 
 	while(1)
 	{
-
 
 	}
 }
