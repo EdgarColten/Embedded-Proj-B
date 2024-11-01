@@ -10,9 +10,10 @@
 //Custom headers
 #include "cpp_main.h"
 #include "Queue.h"
+#include "channel.h"
 
 extern "C" void cpp_main(void);
-
+/*
 class Channel { // @suppress("Miss copy constructor or assignment operator")
 private:
 	//Might be able to be replaced with a Queue*
@@ -23,8 +24,30 @@ private:
 	uint8_t delayCount = 0;
 
 public:
+*//*
+Channel::Channel(){
+    // q_load = 0 via "attribute = 0" style
+}
+*/
+/*
+Test Cases
+myChannel1->setFreq(1);
+myChannel1->setFreq(1);
+myChannel1->setFreq(1);
 
-	void setWaveType(int8_t val){
+myChannel1->setAmp(1);
+myChannel1->setAmp(-1);
+
+myChannel1->setDelay(-1);
+myChannel1->setDelay(-1);
+myChannel1->setDelay(-1);
+*/
+
+waveProp Channel:: getMyWaveProp(void){
+	return myWaveProp;
+}
+
+void Channel::setWaveType(int8_t val){
 		if(shapeCount < 3 && val > 0){
 			shapeCount = shapeCount + 1;
 		}
@@ -56,7 +79,7 @@ public:
 		}
 	}
 
-	void setFreq(int8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
+void Channel::setFreq(int8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
 		if(freqCount < 20 && val > 0){
 			freqCount = freqCount + 1;
 		}
@@ -74,7 +97,7 @@ public:
 
 	}
 
-	void setAmp(int8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
+void Channel::setAmp(int8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
 		if(ampCount < 33 && val > 0){
 			ampCount = ampCount + 1;
 		}
@@ -82,11 +105,11 @@ public:
 			ampCount = ampCount + -1;
 		}
 		myWaveProp.amplitude = ((ampCount * 0.1) + 0.1) * 1215;
-
+		//3.3/4095
 		return;
 	}
 
-	void setDelay(int8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
+void Channel::setDelay(int8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
 		if(val>0 && delayCount<7){
 			delayCount = delayCount + 1;
 	}
@@ -94,18 +117,25 @@ public:
 			delayCount = delayCount - 1;
 		}
 
-		myWaveProp.amplitude = (delayCount/8) * 256;
+		myWaveProp.amplitude = delayCount;
 		return;
 	}
 
-	void cpChannel(waveProp x){ //x is ch1 so the delay value should be 0. This may not give the correct delay
+void Channel::updateCh(nextState ns){
+	setFreq(ns.knobF);
+	setAmp(ns.knobA);
+	setDelay(ns.knobD);
+	setShape(ns.knobS);
+}
+/*
+void Channel::cpChannel(waveProp x){ //x is ch1 so the delay value should be 0. This may not give the correct delay
 		myWaveProp.type = x.type;
 		myWaveProp.frequency = x.frequency;
 		myWaveProp.amplitude = x.amplitude;
 		myWaveProp.delay = x.delay;
-	}
-
-};
+		return;
+}
+*/
 
 
 
