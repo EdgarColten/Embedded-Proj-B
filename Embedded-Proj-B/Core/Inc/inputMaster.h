@@ -12,11 +12,9 @@
 #define INC_INPUTMASTER_H_
 class inputMaster { //This class is the master input driver which takes 4 inputs and puts them into a struct to send to Q//
 public:
-
 	inputMaster();
-	waveProp wProp;
-	waveProp masterGet(uint32_t,uint32_t,uint32_t,wave);
-
+	nextState nState;
+	nextState masterGet(int8_t,int8_t,int8_t,int8_t, int8_t);
 };
 
 #endif /* SRC_INPUTMASTER_H_ */

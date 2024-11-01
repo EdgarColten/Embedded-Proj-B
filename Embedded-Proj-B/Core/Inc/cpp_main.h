@@ -33,6 +33,7 @@ typedef struct{
 	int8_t knobF;
 	int8_t knobA;
 	int8_t knobD;
+	int8_t knobS;
 	int8_t btn;
 }nextState;
 

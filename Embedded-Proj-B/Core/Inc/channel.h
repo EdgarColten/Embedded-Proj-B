@@ -13,12 +13,12 @@ class Channel{
 	uint8_t shapeCount;
 	uint8_t freqCount;
 	uint8_t ampCount;
-	int8_t delayCount;
+	uint8_t delayCount;
 public:
-	void setWaveType(uint8_t);
-	void setFreq(uint8_t);
-	void setAmp(uint8_t);
-	void setDelay(uint8_t);
+	void setWaveType(int8_t);
+	void setFreq(int8_t);
+	void setAmp(int8_t);
+	void setDelay(int8_t);
 	void cpChannel(waveProp);
 };
 
