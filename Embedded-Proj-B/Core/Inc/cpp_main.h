@@ -19,6 +19,7 @@ typedef struct{
 	uint32_t F;
 	wave type;
 	uint8_t channel;
+	uint8_t offset;
 } displayValues;
 
 typedef struct{ //passed to the outputDriver for data collected by the input
