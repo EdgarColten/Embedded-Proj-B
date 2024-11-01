@@ -10,21 +10,45 @@
 //Custom headers
 #include "cpp_main.h"
 #include "Queue.h"
+#include "channel.h"
 
 extern "C" void cpp_main(void);
 
-class Channel { // @suppress("Miss copy constructor or assignment operator")
-private:
-	//Might be able to be replaced with a Queue*
-	waveProp myWaveProp;
-	uint8_t shapeCount = 0;
-	uint8_t freqCount = 0;
-	uint8_t ampCount = 0;
-	uint8_t delayCount = 0;
+/*
+Test Cases
+myChannel1->setFreq(1);
+myChannel1->setFreq(1);
+myChannel1->setFreq(1);
 
-public:
+myChannel1->setAmp(1);
+myChannel1->setAmp(-1);
 
-	void setWaveType(int8_t val){
+myChannel1->setDelay(-1);
+myChannel1->setDelay(-1);
+myChannel1->setDelay(-1);
+*/
+
+//*	Colten Demonstrated JPL RULES
+/*
+
+Level 2:
+	Rule 3: Use verifiable loop bounds for all loops meant to be terminating.
+	Rule 5: Do not use dynamic memory allocation after task initialization.
+	Rule 9: Place restrictions on the use of semaphores and locks.
+	Rule 11: Do not use goto, setjmp, or longjmp
+
+Level 3:
+	Rule 17: Use U32, I16, etc instead of predefined C data types such as int, short, etc.
+	Rule 18: Make the order of evaluation in compound expressions explicit.
+	Rule 19: Do not use expressions with side effects.
+
+
+*/
+waveProp Channel:: getMyWaveProp(void){
+	return myWaveProp;
+}
+
+void Channel::setWaveType(int8_t val){
 		if(shapeCount < 3 && val > 0){
 			shapeCount = shapeCount + 1;
 		}
@@ -56,7 +80,7 @@ public:
 		}
 	}
 
-	void setFreq(int8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
+void Channel::setFreq(int8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
 		if(freqCount < 20 && val > 0){
 			freqCount = freqCount + 1;
 		}
@@ -74,19 +98,19 @@ public:
 
 	}
 
-	void setAmp(int8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
+void Channel::setAmp(int8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
 		if(ampCount < 33 && val > 0){
 			ampCount = ampCount + 1;
 		}
 		else if(ampCount > 0 && val < 0){
 			ampCount = ampCount + -1;
 		}
+		//Example of Rule 18 (Including () to ensure correct computation in correct order)
 		myWaveProp.amplitude = ((ampCount * 0.1) + 0.1) * 1215;
-
 		return;
 	}
 
-	void setDelay(int8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
+void Channel::setDelay(int8_t val){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
 		if(val>0 && delayCount<7){
 			delayCount = delayCount + 1;
 	}
@@ -94,18 +118,26 @@ public:
 			delayCount = delayCount - 1;
 		}
 
-		myWaveProp.amplitude = (delayCount/8) * 256;
+		myWaveProp.amplitude = delayCount;
 		return;
 	}
 
-	void cpChannel(waveProp x){ //x is ch1 so the delay value should be 0. This may not give the correct delay
+void Channel::updateChannel(nextState ns){
+	setFreq(ns.knobF);
+	setAmp(ns.knobA);
+	setDelay(ns.knobD);
+	setWaveType(ns.knobS);
+}
+
+/*
+void Channel::cpChannel(waveProp x){ //x is ch1 so the delay value should be 0. This may not give the correct delay
 		myWaveProp.type = x.type;
 		myWaveProp.frequency = x.frequency;
 		myWaveProp.amplitude = x.amplitude;
 		myWaveProp.delay = x.delay;
-	}
-
-};
+		return;
+}
+*/
 
 
 
