@@ -69,7 +69,6 @@ private:
 
 	uint8_t code[6][16];
 
-	uint8_t SPI_Count;
 	uint8_t SPI_RST_Count;
 	uint8_t SPI_CS_count;
 
@@ -96,8 +95,6 @@ public:
 	void clearChannel_2();
 
 	void updateDisplay();
-
-
 
 };
 

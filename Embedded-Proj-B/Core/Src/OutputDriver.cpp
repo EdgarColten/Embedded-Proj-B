@@ -9,12 +9,13 @@
  * Level 1:
  *  -Rule 1: Stick to language definition (ISO 11 for C and C++) DONE (show settings to display)
  *  -Rule 2: -WALL DONE (show settings to display)
+ * Level 2:
+ *  -Rule 6: use IPC to communicate between tasks TODO: double check that everyone is using queues
  * Level 3:
  * 	-Rule 16: The use of Assertions. TODO
- * 	-Rule :
  * Level 4:
- * 	-Rule 21: Macros shall not be #define'd within a function or a block. TODO (display by using ctrl + f and looking up #define)
- * 	-Rule 22: #undef shall not be used. TODO (display by using ctrl + f and looking up #undef)
+ * 	-Rule 21: Macros shall not be #define'd within a function or a block. TODO:(display by using ctrl + f and looking up #define)
+ * 	-Rule 22: #undef shall not be used. TODO: (display by using ctrl + f and looking up #undef)
  * 	-Rule 31: #include directives in a file shall only be preceded by other preprocessor directives or comments. TODO
  */
 
@@ -67,7 +68,7 @@ extern TIM_HandleTypeDef htim6;
 
 	waveProp signal2;
 	signal2.amplitude = 2045;
-	signal2.frequency = 830;
+	signal2.frequency = 990;
 	signal2.type = delay;
 	signal2.delay = 7;
 
@@ -79,6 +80,66 @@ extern TIM_HandleTypeDef htim6;
 
 	display1.updateDisplay();
 	display2.updateDisplay();
+
+	uint32_t count_1ms = ONE_S;
+	uint32_t count_5ms = 5;
+
+	while(1)
+	{
+		if(count_1ms == 0)
+		{
+			if(signal1.frequency >= 1000)
+				signal1.frequency = 1;
+			else
+				signal1.frequency++;
+			if(signal2.frequency >= 1000)
+				signal2.frequency = 1;
+			else
+				signal2.frequency++;
+
+			count_5ms--;
+			count_1ms = ONE_S;
+
+			waveQueue1.enqueue(signal1);
+			waveQueue2.enqueue(signal2);
+
+			Channel1.update_Channel(Channel1);
+			Channel2.update_Channel(Channel1);
+
+			display1.updateDisplay();
+			display2.updateDisplay();
+		}
+
+		if(count_5ms == 0)
+		{
+			if(signal1.type == pulse)
+				signal1.type = sine;
+			else if(signal1.type == sine)
+				signal1.type = square;
+			else if(signal1.type == square)
+				signal1.type = pulse;
+
+			if(signal2.type == pulse)
+				signal2.type = sine;
+			else if(signal2.type == sine)
+				signal2.type = square;
+			else if(signal2.type == square)
+				signal2.type = pulse;
+
+			count_5ms = 5;
+
+			waveQueue1.enqueue(signal1);
+			waveQueue2.enqueue(signal2);
+
+			Channel1.update_Channel(Channel1);
+			Channel2.update_Channel(Channel1);
+
+			display1.updateDisplay();
+			display2.updateDisplay();
+
+		}
+		count_1ms--;
+	}
 
 */
 
@@ -93,6 +154,9 @@ OutputDriver::OutputDriver(uint8_t chan, waveQueue* wQ, displayQueue* dQ) // @su
 	shape = sine;
 	autoReload = 2731;
 	channel = chan;
+	currentChannelSelected = 1; //TODO talk with Colten to figure out if this is what him and David are doing.
+
+
 }
 
 
@@ -100,7 +164,6 @@ OutputDriver::OutputDriver(uint8_t chan, waveQueue* wQ, displayQueue* dQ) // @su
 void OutputDriver::setAutoReload(TIM_HandleTypeDef* timer)
 {
 
-	//TODO: improve tests and assertions
     (timer)->Instance->ARR = (autoReload);
     (timer)->Init.Period = (autoReload);
 	return;
@@ -142,10 +205,6 @@ void OutputDriver::getAttributes(waveProp* dataPoll)
 void OutputDriver::update_Channel(OutputDriver channel1) //TODO: take out struct and just use queue attribute
 {
 	waveProp signal;
-
-	//sanity check
-	//assert(signalQueue != nullptr);
-
 	bool notEmpty = signalQueue->dequeue(&signal);
 	//checking that there are values to dequeue
 
@@ -160,7 +219,6 @@ void OutputDriver::update_Channel(OutputDriver channel1) //TODO: take out struct
 		GPIOB->ODR |= (1 << 5);// PB_5
 		GPIOB->ODR &= ~(1 << 4); //PB_4
 	}
-
 	else
 	{
 		GPIOB->ODR |= (1 << 4); //PB_4
@@ -184,10 +242,10 @@ void OutputDriver::update_Channel(OutputDriver channel1) //TODO: take out struct
 			HAL_TIM_Base_Start(&htim2);
 			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave, SIZE, DAC_ALIGN_12B_R);
 
-			//assert(oledQueue != nullptr);
 
 			pack();
 			oledQueue->enqueue(dValues);
+			assert(oledQueue != nullptr);
 
 			return;
 		}
@@ -204,11 +262,11 @@ void OutputDriver::update_Channel(OutputDriver channel1) //TODO: take out struct
 			HAL_TIM_Base_Start(&htim6);
 			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
 
-			//assert(oledQueue != nullptr);
+
 
 			pack();
 			oledQueue->enqueue(dValues);
-
+			assert(oledQueue != nullptr);
 
 			return;
 		}
@@ -269,6 +327,7 @@ void OutputDriver::pack()
 	dValues.F = freq;
 	dValues.type = shape;
 	dValues.channel = channel;
+	dValues.offset = offset;
 }
 
 void OutputDriver::delaySet()
@@ -298,7 +357,6 @@ void OutputDriver::delaySet()
 	{
 		uint32_t hold = 0;
 		shiftedWave.dequeue(&hold);
-		//assert(hold > -1);
 		shiftedWave.enqueue(hold);
 	}
 
@@ -306,61 +364,26 @@ void OutputDriver::delaySet()
 	{
 		//uint32_t holdNewValue = 0;
 		shiftedWave.dequeue(&delayOutWave[i]);
-
-		//assert(shiftedWave.dequeue(&delayOutWave[i]) == true);
 	}
 
 	return;
 }
 
+
 //Wave generation
 void OutputDriver::generateWave()
 {
+
 	if(shape == sine)
-	{
 		for(uint32_t i = 0; i < SIZE; i++)
-		{
-			outWave[i] =  ((sin(i*(2*PI)/SIZE) + 1) * (amp/2)); //TODO:find a way to avoid division
-		}
-		return;
-	}
+			outWave[i] = (amp * sineWave[i])/MAX_SIZE;
 
 	else if(shape == square)
-	{
 		for(uint32_t i = 0; i < SIZE; i++)
-		{
-			if(i < SIZE/2) //TODO:find a way to avoid division
-			{
-				outWave[i] = 0;
-			}
-			else
-			{
-				outWave[i] = amp; //1215 = 1 volt
-				if(outWave[i] > (MAX_SIZE - 1))
-				{
-					outWave[i] = (MAX_SIZE - 1);
-				}
-			}
-
-		}
-
-		return;
-	}
+			outWave[i] = (amp * squareWave[i])/MAX_SIZE;
 
 	else if(shape == pulse)
-	{
 		for(uint32_t i = 0; i < SIZE; i++)
-		{
-			if(i < 25) //TODO:find a way to avoid division
-			{
-				outWave[i] = amp; //1215 = 1 volt
-			}
-			else
-				outWave[i] = 0;
-		}
-
-		return;
-	}
-
+			outWave[i] = (amp * pulseWave[i])/MAX_SIZE;
 }
 

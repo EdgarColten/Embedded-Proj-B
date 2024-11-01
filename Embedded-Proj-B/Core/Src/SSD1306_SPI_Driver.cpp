@@ -22,7 +22,6 @@ OLED::OLED(uint8_t chann,displayQueue* dQ){ // @suppress("Class members should b
 	channel = chann;
 	startUpF = false;
 	startUpW = false;
-	SPI_Count = 0;
 	SPI_CS_count = 0;
 	SPI_RST_Count = 0;
 
@@ -941,7 +940,7 @@ void OLED::updateDisplay()
 
 	}
 
-	if(storedValues.type != dValue.type && startUpW == true)
+	if((storedValues.type != dValue.type || storedValues.offset != dValue.offset)&& startUpW == true)
 	{
 		storedValues.type = dValue.type;
 		switch(storedValues.type)
@@ -967,7 +966,33 @@ void OLED::updateDisplay()
 			case delay:
 			{
 				set_partial_code(D,4);
-				set_partial_code(D,5);
+				switch(dValue.offset)
+				{
+					case 1:
+						set_partial_code(one,5);
+						break;
+					case 2:
+						set_partial_code(two,5);
+						break;
+					case 3:
+						set_partial_code(three,5);
+						break;
+					case 4:
+						set_partial_code(four,5);
+						break;
+					case 5:
+						set_partial_code(five,5);
+						break;
+					case 6:
+						set_partial_code(six,5);
+						break;
+					case 7:
+						set_partial_code(seven,5);
+						break;
+					default:
+						set_partial_code(blank,5);
+						break;
+				}
 				break;
 			}
 			default:
@@ -983,7 +1008,7 @@ void OLED::updateDisplay()
 			updateChannel_2();
 		}
 	}
-	else if(storedValues.type != dValue.type && startUpW == false)
+	else if((storedValues.type != dValue.type || storedValues.offset != dValue.offset) && startUpW == false)
 	{
 
 		storedValues.type = dValue.type;
@@ -1010,7 +1035,33 @@ void OLED::updateDisplay()
 			case delay:
 			{
 				set_partial_code(D,4);
-				set_partial_code(D,5);
+				switch(dValue.offset)
+				{
+					case 1:
+						set_partial_code(one,5);
+						break;
+					case 2:
+						set_partial_code(two,5);
+						break;
+					case 3:
+						set_partial_code(three,5);
+						break;
+					case 4:
+						set_partial_code(four,5);
+						break;
+					case 5:
+						set_partial_code(five,5);
+						break;
+					case 6:
+						set_partial_code(six,5);
+						break;
+					case 7:
+						set_partial_code(seven,5);
+						break;
+					default:
+						set_partial_code(blank,5);
+						break;
+				}
 				break;
 			}
 			default:
@@ -1055,7 +1106,33 @@ void OLED::updateDisplay()
 			case delay:
 			{
 				set_partial_code(D,4);
-				set_partial_code(D,5);
+				switch(dValue.offset)
+				{
+					case 1:
+						set_partial_code(one,5);
+						break;
+					case 2:
+						set_partial_code(two,5);
+						break;
+					case 3:
+						set_partial_code(three,5);
+						break;
+					case 4:
+						set_partial_code(four,5);
+						break;
+					case 5:
+						set_partial_code(five,5);
+						break;
+					case 6:
+						set_partial_code(six,5);
+						break;
+					case 7:
+						set_partial_code(seven,5);
+						break;
+					default:
+						set_partial_code(blank,5);
+						break;
+				}
 				break;
 			}
 			default:
@@ -1081,21 +1158,11 @@ void OLED::updateDisplay()
 }
 
 
-
 void OLED::send_command(uint8_t command)
 {
 	LL_GPIO_ResetOutputPin(SSD1306_DC_GPIO_Port, SSD1306_DC_Pin);
-
-	if(SPI_Count == 0)
-	{
-		HAL_SPI_Transmit(&hspi1, &command, CHARACTER_SIZE, HAL_MAX_DELAY);
-		SPI_Count++;
-	}
-	else
-	{
-		LL_SPI_TransmitData8(hspi1.Instance, command);
-		while(LL_SPI_IsActiveFlag_TXE(hspi1.Instance)==0);
-	}
+	LL_SPI_TransmitData8(SPI1, command);
+	while(LL_SPI_IsActiveFlag_TXE(SPI1)==0);
 
 	return;
 }
@@ -1106,8 +1173,10 @@ void OLED::send_data(uint8_t* data)
 
 	for(uint32_t i = 0; i < CHARACTER_SIZE; i++)
 	{
-		LL_SPI_TransmitData8(hspi1.Instance, data[i]);
-		while(LL_SPI_IsActiveFlag_TXE(hspi1.Instance)==0);
+
+		LL_SPI_TransmitData8(SPI1, data[i]);
+		while(LL_SPI_IsActiveFlag_TXE(SPI1)==0);
+
 	}
 	return;
 
@@ -1128,7 +1197,7 @@ void OLED::SSD1306_init()
 		SPI_CS_count = 1;
 	}
 
-	/*
+
     send_command(SSD1306_COMMAND_DISPLAY_OFF); //set display off
 
     send_command(SSD1306_COMMAND_ADDRESSING_MODE); //Set addressing mode
@@ -1170,50 +1239,6 @@ void OLED::SSD1306_init()
     send_command(SSD1306_COMMAND_DISPLAY_ON); //set display on
     clear_display();
     return;
-*/
-    send_command(0xAE); //set display off
-    send_command(0x20); //Set addressing mode
-    send_command(0x00); //horizontal addressing mode
-
-    send_command(0xD3); //Display offset
-    send_command(0x00); //no offset
-
-    send_command(0x40); //set display start line
-
-    send_command(0x81);// set contrast
-    send_command(0xFF);//max contrast
-
-    send_command(0xA1);//set segment remap, col address SEG0 = 127
-    send_command(0xA4);
-
-    send_command(0xA8); //set MUX Ratio
-    send_command(0x3F);
-
-    send_command(0xC8); //set com scan mode, C8 = from COM[N - 1] to COM[0]
-
-    send_command(0xDA);  //set COM pins hardware configuration
-    send_command(0x12);
-
-    send_command(0xA4); //set output with RAM contents
-
-    send_command(0xD9); //set precharge value
-    send_command(0x22);
-
-    send_command(0xD5); //Set frequency (Tentatively)
-    send_command(0x80);
-
-    send_command(0xDB);//set vcomh
-    send_command(0x20); //0x20,0.77xVcc
-
-    send_command(0x8D);//set DC-DC enable
-    send_command(0x14);
-
-    send_command(0xAF); //set display on
-    clear_display();
-
-    return;
-    /**/
-
 }
 
 void OLED::set_column_address(uint8_t begin, uint8_t end)
