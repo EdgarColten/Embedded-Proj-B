@@ -13,22 +13,7 @@
 #include "channel.h"
 
 extern "C" void cpp_main(void);
-/*
-class Channel { // @suppress("Miss copy constructor or assignment operator")
-private:
-	//Might be able to be replaced with a Queue*
-	waveProp myWaveProp;
-	uint8_t shapeCount = 0;
-	uint8_t freqCount = 0;
-	uint8_t ampCount = 0;
-	uint8_t delayCount = 0;
 
-public:
-*//*
-Channel::Channel(){
-    // q_load = 0 via "attribute = 0" style
-}
-*/
 /*
 Test Cases
 myChannel1->setFreq(1);
@@ -43,6 +28,22 @@ myChannel1->setDelay(-1);
 myChannel1->setDelay(-1);
 */
 
+//*	Colten Demonstrated JPL RULES
+/*
+
+Level 2:
+	Rule 3: Use verifiable loop bounds for all loops meant to be terminating.
+	Rule 5: Do not use dynamic memory allocation after task initialization.
+	Rule 9: Place restrictions on the use of semaphores and locks.
+	Rule 11: Do not use goto, setjmp, or longjmp
+
+Level 3:
+	Rule 17: Use U32, I16, etc instead of predefined C data types such as int, short, etc.
+	Rule 18: Make the order of evaluation in compound expressions explicit.
+	Rule 19: Do not use expressions with side effects.
+
+
+*/
 waveProp Channel:: getMyWaveProp(void){
 	return myWaveProp;
 }
@@ -104,8 +105,8 @@ void Channel::setAmp(int8_t val){ //when incrementing and decrementing this freq
 		else if(ampCount > 0 && val < 0){
 			ampCount = ampCount + -1;
 		}
+		//Example of Rule 18 (Including () to ensure correct computation in correct order)
 		myWaveProp.amplitude = ((ampCount * 0.1) + 0.1) * 1215;
-		//3.3/4095
 		return;
 	}
 
@@ -121,12 +122,13 @@ void Channel::setDelay(int8_t val){ //when incrementing and decrementing this fr
 		return;
 	}
 
-void Channel::updateCh(nextState ns){
+void Channel::updateChannel(nextState ns){
 	setFreq(ns.knobF);
 	setAmp(ns.knobA);
 	setDelay(ns.knobD);
-	setShape(ns.knobS);
+	setWaveType(ns.knobS);
 }
+
 /*
 void Channel::cpChannel(waveProp x){ //x is ch1 so the delay value should be 0. This may not give the correct delay
 		myWaveProp.type = x.type;

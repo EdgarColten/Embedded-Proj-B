@@ -11,12 +11,12 @@
 #define INC_SEMAPHOR_H_
 
 
-#define QUEUE_BUFF_SIZE 1
-#define BUFF_END 0
+#define SEMA_SIZE 1
+#define SEMA_END 0
 
 
 class Semaphor{
-    uint32_t buffer[QUEUE_BUFF_SIZE];
+    uint32_t buffer[SEMA_SIZE];
     uint8_t head = 0;
     uint8_t tail = 0;
 

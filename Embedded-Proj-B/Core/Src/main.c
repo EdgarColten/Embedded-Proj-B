@@ -48,6 +48,8 @@ SPI_HandleTypeDef hspi1;
 
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim6;
+//
+TIM_HandleTypeDef htim7;
 
 UART_HandleTypeDef huart2;
 
@@ -63,8 +65,11 @@ static void MX_DAC1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM6_Init(void);
 static void MX_SPI1_Init(void);
-/* USER CODE BEGIN PFP */
 
+//
+static void MX_TIM7_Init(void);
+/* USER CODE BEGIN PFP */
+void myTIM7_IRQHandler();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -110,9 +115,10 @@ int main(void)
   MX_TIM6_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_TIM_Base_Start_IT(&htim7);
   /* USER CODE END 2 */
-
+  //Starting Timer 7 for sempahore
+//  HAL_TIME_Base_start_IT(&htim7);
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   cpp_main();

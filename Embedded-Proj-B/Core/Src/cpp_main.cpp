@@ -49,18 +49,30 @@
 #include "Semaphor.h"
 
 
+static Semaphor values;
+
+extern TIM_HandleTypeDef htim7;
+
 extern "C" void cpp_main(void);
-//?
-Queue semaphor;
+
+   //Worked with Olivia C
+extern "C" void myTIM7_IQRHandler(void)
+{
+	if(__HAL_TIM_GET_FLAG(&htim7,TIM_FLAG_UPDATE))
+	{
+		if(__HAL_TIM_GET_IT_SOURCE(&htim7, TIM_IT_UPDATE) != 0)
+		{
+			__HAL_TIM_CLEAR_IT(&htim7,TIM_IT_UPDATE);
+			values.enqueue(1);
+		}
+	}
+}
 
 void cpp_main(){
 
 
 	while(1)
 	{
-//Test Cases for applicationClass1Colten
-		//S1.enqueue from timer interrupt
-		//(if not S1 dequeue) task1.update();
 
 	}
 
