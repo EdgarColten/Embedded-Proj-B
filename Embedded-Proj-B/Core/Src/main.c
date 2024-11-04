@@ -48,7 +48,6 @@ SPI_HandleTypeDef hspi1;
 
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim6;
-//
 TIM_HandleTypeDef htim7;
 
 UART_HandleTypeDef huart2;
@@ -65,6 +64,8 @@ static void MX_DAC1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM6_Init(void);
 static void MX_SPI1_Init(void);
+static void MX_TIM7_Init(void);
+/* USER CODE BEGIN PFP */
 
 //
 static void MX_TIM7_Init(void);
@@ -114,11 +115,11 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM6_Init();
   MX_SPI1_Init();
+  MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim7);
   /* USER CODE END 2 */
-  //Starting Timer 7 for sempahore
-//  HAL_TIME_Base_start_IT(&htim7);
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   cpp_main();
@@ -366,6 +367,44 @@ static void MX_TIM6_Init(void)
 }
 
 /**
+  * @brief TIM7 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM7_Init(void)
+{
+
+  /* USER CODE BEGIN TIM7_Init 0 */
+
+  /* USER CODE END TIM7_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM7_Init 1 */
+
+  /* USER CODE END TIM7_Init 1 */
+  htim7.Instance = TIM7;
+  htim7.Init.Prescaler = 15;
+  htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim7.Init.Period = 9999;
+  htim7.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim7) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim7, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM7_Init 2 */
+
+  /* USER CODE END TIM7_Init 2 */
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -436,17 +475,29 @@ static void MX_GPIO_Init(void)
   LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOB);
 
   /**/
-  LL_GPIO_ResetOutputPin(GPIOA, SPI_RST_Pin|SPI_CS_Pin|SSD1306_DC_Pin);
+  LL_GPIO_ResetOutputPin(GPIOA, SSD1306_DC_Pin|SPI_CS_Pin|SPI_RST_Pin);
 
   /**/
   LL_GPIO_ResetOutputPin(GPIOB, LD3_Pin|Signal_Pass_LED_Pin|Signal_Fail_LED_Pin);
 
   /**/
-  GPIO_InitStruct.Pin = SPI_RST_Pin|SPI_CS_Pin|SSD1306_DC_Pin;
+  GPIO_InitStruct.Pin = SSD1306_DC_Pin|SPI_CS_Pin|SPI_RST_Pin;
   GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
   GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
   GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
   GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+  LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /**/
+  GPIO_InitStruct.Pin = Freq_knob_B_Pin|Delay_knob_A_Pin|Amp_knob_B_Pin|Amp_knob_A_Pin;
+  GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
+  LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /**/
+  GPIO_InitStruct.Pin = channel_select_sw_Pin|shape_btn_Pin|Delay_knob_B_Pin|Freq_knob_A_Pin;
+  GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
   LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /**/

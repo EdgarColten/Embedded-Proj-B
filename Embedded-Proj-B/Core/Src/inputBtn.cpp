@@ -9,7 +9,7 @@
 #include "stm32l4xx_hal.h"
 #include <cstdint>
 
-inputBtn::inputBtn(GPIO_TypeDef* gpioAddress, uint8_t pinN) {
+inputBtn::inputBtn(GPIO_TypeDef* gpioAddress, uint32_t pinN) {
 	 gpio_address = gpioAddress;
 	 pinNum = pinN;
 }
@@ -17,10 +17,12 @@ int8_t inputBtn::stateMachine(){
     if ((gpio_address -> IDR & (1<<pinNum)) == 0)
     {
     	cstate = 1;
+
     }
     else
     {
     	cstate = 0;
+
     }
     if(cstate && !pstate){
     	msg = 1;
