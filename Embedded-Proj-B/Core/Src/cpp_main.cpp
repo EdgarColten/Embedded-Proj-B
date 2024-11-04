@@ -84,17 +84,8 @@ void cpp_main()
 	OLED display = OLED(&OLED_Queue);
 
 
-    channel.updateChannel();
-
-	Signal.update_Channel();
-
-	display.updateDisplay();
-
-
-
     while(1)
 	{
-
 		input.update();
 
 	    channel.updateChannel();

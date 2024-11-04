@@ -35,6 +35,7 @@ typedef struct{ //passed to the outputDriver for data collected by the input
 
 	uint32_t frequency2;
 	uint32_t amplitude2;
+
 	uint32_t delay;
 	wave type2;
 

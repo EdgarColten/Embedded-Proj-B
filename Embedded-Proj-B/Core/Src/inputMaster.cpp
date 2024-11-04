@@ -45,7 +45,6 @@ void inputMaster::update()
 
 		freq = freq_knob.edgeDetector();
 		amp = amp_knob.edgeDetector();
-		delay = delay_knob.edgeDetector();
 		shape = shape_btn.stateMachine();
 
 		masterGet();

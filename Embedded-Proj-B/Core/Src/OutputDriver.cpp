@@ -10,7 +10,7 @@
  *  -Rule 1: Stick to language definition (ISO 11 for C and C++) DONE (show settings to display)
  *  -Rule 2: -WALL DONE (show settings to display)
  * Level 2:
- *  -Rule 6: use IPC to communicate between tasks TODO: double check that everyone is using queues
+ *  -Rule 6: use IPC to communicate between tasks DONE
  * Level 3:
  * 	-Rule 16: The use of Assertions. TODO
  * Level 4:
@@ -172,13 +172,22 @@ OutputDriver::OutputDriver(waveQueue* wQ, displayQueue* dQ) // @suppress("Class 
 	shape1 = sine;
 	autoReload1 = 2731;
 
+	oldFreq1 = freq1;
+	oldAmp1 = amp1;
+	oldShape1 = shape1;
+
 	freq2 = 100;
 	amp2 = 2048;
 	shape2 = sine;
 	autoReload2 = 2731;
 	offset = 0;
 
+	oldFreq2 = freq2;
+	oldAmp2 = amp2;
+	oldShape2 = shape2;
+
 	channel = 1;
+
 	calculateAutoReload1();
 	setAutoReload(&htim2,1);
 	generateWave(1);
@@ -248,7 +257,7 @@ void OutputDriver::calculateAutoReload2() //Period of the signal //TODO: add an 
 {
 
 	uint32_t trig2 = 0;
-	trig2 = freq2 * (SIZE);
+	trig2 = freq2 * (SIZE) * (4 + 1);
 	autoReload2 = ((CPU_CLK/trig2) - 1); //TODO:find a way to avoid division
 	return;
 
@@ -266,7 +275,7 @@ void OutputDriver::update_Channel()
 	channel = signal.channel;
 
 	////////////////////Testing dequeued value//////////////////////
-	if((signal.frequency1 > 0 && signal.frequency1 <= 1000) && (signal.amplitude1 > 0 && signal.amplitude1 < 4096) && (signal.type1 >= 0 && signal.type1 < 4) && (signal.delay >= 0 && signal.delay < 8))
+	if((signal.frequency1 > 0 && signal.frequency1 <= 1000) && (signal.amplitude1 > 0 && signal.amplitude1 < 4033) && (signal.type1 >= 0 && signal.type1 < 3) && (signal.delay >= 0 && signal.delay < 8))
 	{
 		GPIOB->ODR |= (1 << 5);// PB_5
 		GPIOB->ODR &= ~(1 << 4); //PB_4
@@ -279,23 +288,84 @@ void OutputDriver::update_Channel()
 		return;
 	}
 	////////////////////Testing dequeued value//////////////////////
+	setAttributes1(signal);
+	setAttributes2(signal);
 
-	if(freq1 == freq2)
+	if(freq1 != oldFreq1 || amp1 != oldAmp1 || shape1 != oldShape1)
 	{
-		setAttributes1(signal);
+		oldFreq1 = freq1;
+		oldAmp1 = amp1;
+		oldShape1 = shape1;
+
 		calculateAutoReload1();
 
 		setAutoReload(&htim2,1);
 		generateWave(1);
+
 		resetCounter(&htim2,1);
+	}
 
 
-		setAttributes2(signal);
+	if((freq2 != oldFreq2 || amp2 != oldAmp2 || shape2 != oldShape2) && shape2 != delay)
+	{
+
+		oldFreq2 = freq2;
+		oldAmp2 = amp2;
+		oldShape2 = shape2;
+
+
 		calculateAutoReload2();
 
 		setAutoReload(&htim6,2);
 		generateWave(2);
+
 		resetCounter(&htim6,2);
+	}
+
+
+	if(shape2 == delay && oldShape2 != delay)
+	{
+
+		oldShape2 = delay;
+		offset = signal.delay;
+		generateWave(1);
+
+
+		setAutoReload(&htim6,1);
+		delaySet();
+
+
+		resetCounter(&htim6,2);
+		resetCounter(&htim2,1);
+
+		HAL_DAC_Stop_DMA(&hdac1, DAC1_CHANNEL_1);
+		HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave1, SIZE, DAC_ALIGN_12B_R);
+
+		HAL_DAC_Stop_DMA(&hdac1, DAC1_CHANNEL_2);
+		HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave2, SIZE, DAC_ALIGN_12B_R);
+	}
+
+	else if(shape2 == delay && oldShape2 == delay)
+	{
+		offset = signal.delay;
+
+		delaySet();
+
+		resetCounter(&htim6,2);
+		resetCounter(&htim2,1);
+
+	}
+
+	if(offset != signal.delay && shape2 == delay)
+		delaySet();
+
+	if(shape1 == shape2 && oldShape1 != oldShape2)
+	{
+		oldShape1 = shape1;
+		oldShape2 = shape2;
+
+		resetCounter(&htim6,2);
+		resetCounter(&htim2,1);
 
 		HAL_DAC_Stop_DMA(&hdac1, DAC1_CHANNEL_2);
 		HAL_DAC_Stop_DMA(&hdac1, DAC1_CHANNEL_1);
@@ -303,77 +373,6 @@ void OutputDriver::update_Channel()
 		HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave1, SIZE, DAC_ALIGN_12B_R);
 		HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave2, SIZE, DAC_ALIGN_12B_R);
 
-	}
-
-	if(freq1 != signal.frequency1 || amp1 != signal.amplitude1 || shape1 != signal.type1)
-	{
-		setAttributes1(signal);
-		calculateAutoReload1();
-
-		setAutoReload(&htim2,1);
-		generateWave(1);
-
-		resetCounter(&htim2,1);
-
-	}
-
-	if(freq2 != signal.frequency2 || amp2 != signal.amplitude2 || shape2 != signal.type2)
-	{
-
-		setAttributes2(signal);
-		calculateAutoReload2();
-
-		setAutoReload(&htim6,2);
-		generateWave(2);
-
-		resetCounter(&htim6,2);
-	}
-
-
-	if(signal.delay != offset && shape2 == delay)
-	{
-
-		if(freq2 != freq1 || amp2 != amp1 || shape2 != shape1 || offset != signal.delay)
-		{
-
-			offset = signal.delay;
-			shapeHold = signal.type2;
-
-			freq2 = freq1;
-			amp2 = amp1;
-			shape2 = shape1;
-
-			calculateAutoReload2();
-			setAutoReload(&htim6,2);
-			generateWave(2);
-
-			HAL_DAC_Stop_DMA(&hdac1, DAC1_CHANNEL_2);
-			HAL_DAC_Stop_DMA(&hdac1, DAC1_CHANNEL_1);
-
-			resetCounter(&htim6,2);
-			resetCounter(&htim2,1);
-
-			if(offset == 0)
-			{
-				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave1, SIZE, DAC_ALIGN_12B_R);
-				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave2, SIZE, DAC_ALIGN_12B_R);
-			}
-			else if(offset > 0 && offset < 8)
-			{
-				for(uint32_t i = 0; i < SIZE; i++)
-				{
-					delayOutWave[i] = outWave2[i];
-				}
-				delaySet();
-
-				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave1, SIZE, DAC_ALIGN_12B_R);
-				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave2, SIZE, DAC_ALIGN_12B_R);
-
-				shape2 = shapeHold;
-			}
-
-
-		}
 	}
 
 
@@ -410,7 +409,7 @@ void OutputDriver::delaySet()
 	for(uint32_t i = 0; i < SIZE; i++)
 	{
 		shiftedWave.enqueue(outWave1[i]);
-		//assert(shiftedWave.enqueue(outWave[i]) == true);
+
 		if(outWave1[i] >= 0 && outWave1[i] < 4095)
 		{
 			GPIOB->ODR |= (1 << 3); //PB_3
@@ -431,7 +430,6 @@ void OutputDriver::delaySet()
 
 	for(uint32_t i = 0; i < SIZE; i++)
 	{
-		//uint32_t holdNewValue = 0;
 		shiftedWave.dequeue(&outWave2[i]);
 	}
 
@@ -441,10 +439,11 @@ void OutputDriver::delaySet()
 //Wave generation
 void OutputDriver::generateWave(uint8_t chan)
 {
+	assert((chan > 0) && (chan < 3));
 	if(chan == 1)
 	{
 		if(shape1 == sine)
-			for(uint32_t i = 0; i < SIZE; i++)
+			for(uint32_t i = 0; i < 255; i++)
 				outWave1[i] = (amp1 * sineWave[i])/3971;
 
 		else if(shape1 == square)

@@ -33,6 +33,7 @@ OLED::OLED(displayQueue* dQ){ // @suppress("Class members should be properly ini
 		}
 	}
 
+
 	SSD1306_init();
 	set_OLED();
 
@@ -190,7 +191,6 @@ void OLED::updateChannel_1()
 }
 void OLED::updateChannel_2()
 {
-	//clearChannel();
 
 	//Current Channel display
 	set_column_address(30,37);
@@ -1084,10 +1084,8 @@ void OLED::send_data(uint8_t* data)
 
 	for(uint32_t i = 0; i < CHARACTER_SIZE; i++)
 	{
-
 		LL_SPI_TransmitData8(SPI1, data[i]);
 		while(LL_SPI_IsActiveFlag_TXE(SPI1)==0);
-
 	}
 	return;
 
@@ -1198,55 +1196,3 @@ void OLED::clear_display()
 	}
 	return;
 }
-
-void OLED::clearChannel()
-{
-	//Current Channel display
-	set_column_address(30,37);
-	set_page_address(0,1);
-	send_data(blank);
-
-	//Frequency display
-	set_column_address(61,68);
-	set_page_address(2,3);
-	send_data(blank);
-
-	set_column_address(70,77);
-	set_page_address(2,3);
-	send_data(blank);
-
-	set_column_address(79,86);
-	set_page_address(2,3);
-	send_data(blank);
-
-	set_column_address(88,95);
-	set_page_address(2,3);
-	send_data(blank);
-
-	//Amplitude Display
-	set_column_address(61,68);
-	set_page_address(4,5);
-	send_data(blank);
-
-	set_column_address(70,77);
-	set_page_address(4,5);
-	send_data(blank);
-
-	set_column_address(79,86);
-	set_page_address(4,5);
-	send_data(blank);
-
-	//Wave display
-	set_column_address(70,77);
-	set_page_address(6,7);
-	send_data(blank);
-
-	set_column_address(78,85);
-	set_page_address(6,7);
-	send_data(blank);
-
-
-	return;
-}
-
-
