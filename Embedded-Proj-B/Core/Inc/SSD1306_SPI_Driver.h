@@ -59,21 +59,29 @@ private:
 	//uint8_t character[16];
 	displayQueue* queue;
 	uint32_t waveFreq[4];
+	uint32_t waveAmp[2];
 
 	//use these to compare the last struct to the new struct being dequeued
 	displayValues storedValues;
-	bool startUpF;
-	bool startUpW;
+
 
 	uint8_t channel;
 
 	uint8_t code[6][16];
 
+	uint8_t frequency1[4][16];
+	uint8_t amplitude1[3][16];
+	uint8_t shape1[2][16];
+
+	uint8_t frequency2[4][16];
+	uint8_t amplitude2[3][16];
+	uint8_t shape2[2][16];
+
 	uint8_t SPI_RST_Count;
 	uint8_t SPI_CS_count;
 
 public:
-	OLED(uint8_t,displayQueue*);
+	OLED(displayQueue*);
 
 	//SPI commands to set the display up and set what it displays
 	void send_command(uint8_t);
@@ -86,13 +94,12 @@ public:
 	void set_page_address(uint8_t,uint8_t);
 	void clear_display();
 
-	void set_partial_code(uint8_t*, uint8_t);
+	void set_partial_code(uint8_t*,uint8_t*);
 
 	void updateChannel_1();
 	void updateChannel_2();
 
-	void clearChannel_1();
-	void clearChannel_2();
+	void clearChannel();
 
 	void updateDisplay();
 

@@ -46,8 +46,12 @@ bool displayQueue::dequeue(displayValues *msg){ //works with the head
             buffer[n] = buffer[n+1];
         }*/
         displayValues clear;
-        clear.F = 0;
-        //clear.F2 = 0;
+        clear.F1 = 0;
+        clear.F2 = 0;
+        clear.channel = 0;
+        clear.offset = 0;
+        clear.type1 = sine;
+        clear.type2 = sine;
 
         buffer[head] = clear;
 

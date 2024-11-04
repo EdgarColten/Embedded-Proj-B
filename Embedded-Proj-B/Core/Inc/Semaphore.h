@@ -11,17 +11,17 @@
 #define INC_SEMAPHOR_H_
 
 
-#define SEMA_SIZE 1
-#define SEMA_END 0
+#define SEMA_SIZE 2
+#define SEMA_END 1
 
 
-class Semaphor{
+class Semaphore{
     uint32_t buffer[SEMA_SIZE];
     uint8_t head = 0;
     uint8_t tail = 0;
 
 public:
-    Semaphor();
+    Semaphore();
     bool enqueue(uint32_t msg);
     bool dequeue(uint32_t* msg);
 };
