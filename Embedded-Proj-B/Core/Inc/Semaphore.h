@@ -6,6 +6,7 @@
  */
 
 /**
+*@file Semaphore.h
 *@brief Semaphore (FIFO queue).
 */
 #include <cstdint>

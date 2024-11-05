@@ -5,6 +5,7 @@
  *      Author: LogMa
  */
 /**
+*@file	inputQueue.h
 *@brief FIFO queue.
 */
 #include "cpp_main.h"

@@ -6,6 +6,7 @@
  */
 
 /**
+*@file waveQueue.h
 *@brief FIFO queue.
 */
 #include "cpp_main.h"

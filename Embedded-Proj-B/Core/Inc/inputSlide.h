@@ -5,6 +5,10 @@
  *      Author: color
  */
 
+/**
+ * @file	inputSlide.h
+ * @brief	Input Driver for a switch
+ */
 #ifndef INC_INPUTSLIDE_H_
 #define INC_INPUTSLIDE_H_
 #include <cstdint>
@@ -15,7 +19,12 @@ public:
 	uint32_t pinNum;
     GPIO_TypeDef* gpio_address;
     uint8_t rValue;
-	inputSlide(GPIO_TypeDef*,uint32_t);
+	inputSlide(GPIO_TypeDef*,uint32_t); //Constructor
+
+	/**
+	 * @brief Checks the user-chosen input pin's value
+	 * @return Returns the user-chosen input pin's value
+	 */
 	int8_t slideGet();
 
 };
