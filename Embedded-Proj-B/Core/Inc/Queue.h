@@ -6,6 +6,7 @@
  */
 
 /**
+*@file Queue.h
 *@brief FIFO queue.
 */
 #include <cstdint>

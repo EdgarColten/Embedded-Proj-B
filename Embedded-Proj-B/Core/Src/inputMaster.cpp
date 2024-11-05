@@ -12,14 +12,13 @@
 /*
 David JPL Rules:
 Level 2:
-		4: Do not use task delays for task synchronization.
-		7: Do not use direct or indirect recursion
-		10 Use memory protection, safety margins, barrier patterns
-		12: Do not use selective value assignments to elements of an enum list
+		4: Do not use task delays for task synchronization.								//Not using delays at all
+		7: Do not use direct or indirect recursion										//No functions call themselves
+		10 Use memory protection, safety margins, barrier patterns						//MemoryBuffer.h handles this for every Queue being used
+		12: Do not use selective value assignments to elements of an enum list			//Using 1 enum that does not use selective value assignments
 Level 3:
-		13: Declare data objects at smallest possible level of scope
-		14: Check the return value of non-void functions, or explicitly cast to (void)
-		15: Check the validity of values passed to functions
+		13: Declare data objects at smallest possible level of scope					//Extern is used but it is used as advised by JPL
+		14: Check the return value of non-void functions, or explicitly cast to (void)	//All return values are used in functions
 
 */
 inputMaster::inputMaster(inputQueue* Ch, Semaphore* decide)

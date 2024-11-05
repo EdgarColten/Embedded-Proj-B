@@ -6,7 +6,8 @@
  */
 
 /**
- * @brief Memory Barrier.
+ * @file	MemoryBuffer.h
+ * @brief	Memory Barrier.
  */
 #include <cstdint>
 
