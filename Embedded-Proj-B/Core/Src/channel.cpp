@@ -33,15 +33,15 @@ myChannel1->setDelay(-1);
 /*
 
 Level 2:
-	Rule 3: Use verifiable loop bounds for all loops meant to be terminating.
-	Rule 5: Do not use dynamic memory allocation after task initialization.
-	Rule 9: Place restrictions on the use of semaphores and locks.
-	Rule 11: Do not use goto, setjmp, or longjmp
+	Rule 3: Use verifiable loop bounds for all loops meant to be terminating.		All Loops have a predetermined unchangable bound except for while 1 loop in cpp main and in main
+	Rule 5: Do not use dynamic memory allocation after task initialization.			Checked for malloc throughout code and never used
+	Rule 9: Place restrictions on the use of semaphores and locks.					Semaphore has defined bounds. (Size of 2)
+	Rule 11: Do not use goto, setjmp, or longjmp									Checked for goto, setjmp, and longjmp in code and never used
 
 Level 3:
-	Rule 17: Use U32, I16, etc instead of predefined C data types such as int, short, etc.
-	Rule 18: Make the order of evaluation in compound expressions explicit.
-	Rule 19: Do not use expressions with side effects.
+	Rule 17: Use U32, I16, etc instead of predefined C data types such as int, short, etc.			All variables are of type U32 or the like except in syscalls.c, does not break rule
+	Rule 18: Make the order of evaluation in compound expressions explicit.							All complex equations used have explicit parenthesis used to separates the operations in the correct order.
+	Rule 19: Do not use expressions with side effects.												Checking if statements to ensure values are never set to variable instead of checked. All variables are assigned values not changing the values of the given variable unless specified/intentional
 
 
 */
