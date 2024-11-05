@@ -51,6 +51,7 @@ private:
 	uint32_t offset;
 	uint32_t autoReload2;
 
+	uint32_t oldFreq2_Delay;
 	uint8_t channel;
 
 	//Output wave tables
@@ -119,7 +120,7 @@ public:
 
 	void generateWave(uint8_t);
 	void setAutoReload(TIM_HandleTypeDef*,uint8_t);
-	void resetCounter(TIM_HandleTypeDef*,uint8_t);
+	void resetCounter(TIM_HandleTypeDef*);
 
 	void delaySet();
 
