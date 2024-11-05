@@ -6,6 +6,7 @@
  */
 
 #include <cstdint>
+#include <cassert>
 
 //Custom headers
 #include "cpp_main.h"
@@ -68,6 +69,8 @@ Channel::Channel(inputQueue* iQ, waveQueue* wQ) // @suppress("Class members shou
 	ampCount2 = 15;
 
 	delayCount = 0;
+
+	assert(delayCount == 0);
 	chanCount = 1;
 	Input_q = iQ;
 	Wave_q = wQ;
@@ -77,6 +80,7 @@ void Channel::setWaveType(){
 
 	if(ns.btn_S == 0)
 		return;
+	assert(ns.btn_S != 0);
 
 	if(ns.btn_S == 1 && chanCount == 1){
 		if(shapeCount1 < 2){
@@ -108,7 +112,7 @@ void Channel::setWaveType(){
 		}
 	}
 
-	else if(ns.btn_S == 1 && chanCount == 2){
+	else if((ns.btn_S == 1) && (chanCount == 2)){
 		if(shapeCount2 < 3){
 			shapeCount2 = shapeCount2 + 1;
 		}
@@ -151,6 +155,7 @@ void Channel::setFreq(){ //when incrementing and decrementing this frequency you
 
 	if(ns.knobF == 0)
 		return;
+	assert(ns.knobF != 0);
 
 	if(chanCount == 1)
 	{
@@ -218,22 +223,23 @@ void Channel::setAmp(){ //when incrementing and decrementing this frequency you 
 
 		if(ns.knobA == 0)
 			return;
+		assert(ns.knobA != 0);
 		if(chanCount == 1)
 		{
-			if(ampCount1 < 33 && ns.knobA == 1){
+			if(ampCount1 < 32 && ns.knobA == 1){
 				ampCount1 = ampCount1 + 1;
 			}
 
-			else if(ampCount1 > 0 && ns.knobA == -1){
+			else if(ampCount1 > 1 && ns.knobA == -1){
 				ampCount1 = ampCount1 + -1;
 			}
 
-			else if(ampCount1 == 33 && ns.knobA == 1){
-				ampCount1 = 33;
+			else if(ampCount1 == 32 && ns.knobA == 1){
+				ampCount1 = 32;
 			}
 
 			else if(ampCount1 == 0 && ns.knobA == -1){
-				ampCount1 = 0;
+				ampCount1 = 1;
 			}
 
 			myWaveProp.amplitude1 = ((ampCount1 * 0.1) + 0.1) * 1260;
@@ -242,20 +248,20 @@ void Channel::setAmp(){ //when incrementing and decrementing this frequency you 
 
 		if(chanCount == 2)
 		{
-			if(ampCount2 < 33 && ns.knobA == 1){
+			if(ampCount2 < 31 && ns.knobA == 1){
 				ampCount2 = ampCount2 + 1;
 			}
 
-			else if(ampCount2 > 0 && ns.knobA == -1){
+			else if(ampCount2 > 1 && ns.knobA == -1){
 				ampCount2 = ampCount2 + -1;
 			}
 
-			else if(ampCount2 == 33 && ns.knobA == 1){
-				ampCount2 = 33;
+			else if(ampCount2 == 31 && ns.knobA == 1){
+				ampCount2 = 31;
 			}
 
-			else if(ampCount2 == 0 && ns.knobA == -1){
-				ampCount2 = 0;
+			else if(ampCount2 == 1 && ns.knobA == -1){
+				ampCount2 = 1;
 			}
 
 			myWaveProp.amplitude2 = ((ampCount2 * 0.1) + 0.1) * 1260;
@@ -270,6 +276,7 @@ void Channel::setDelay(){ //when incrementing and decrementing this frequency yo
 	{
 		if(ns.knobD == 0)
 			return;
+		assert(ns.knobD != 0);
 
 		if(delayCount < 7 && ns.knobD == 1){
 			delayCount = delayCount + 1;
@@ -314,6 +321,7 @@ void Channel::updateChannel(){
 
 	chanCount = ns.sw_select;
 
+	assert(chanCount == ns.sw_select);
 
 	setFreq();
 	setAmp();

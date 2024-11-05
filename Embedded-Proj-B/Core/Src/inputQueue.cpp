@@ -4,6 +4,8 @@
  *  Created on: Nov 1, 2024
  *      Author: LogMa
  */
+#include <cassert>
+
 #include "main.h"
 #include "cpp_main.h"
 #include "inputQueue.h"
@@ -18,6 +20,7 @@ bool inputQueue::enqueue(nextState msg){ //works with the tail
         ok = false;
     }
     else{
+    	assert((tail + 1) != head);
         buffer[tail] = msg;
 
         if(tail == Q_BUFFER_END){
@@ -35,6 +38,7 @@ bool inputQueue::dequeue(nextState *msg){ //works with the head
     bool ok = false;
     if (head == tail) {
         ok = false;
+        assert(ok == false);
     }
     else{
         *msg = buffer[head];

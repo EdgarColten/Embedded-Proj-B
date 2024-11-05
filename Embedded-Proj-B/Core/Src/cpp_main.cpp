@@ -37,6 +37,7 @@
 
 //custom includes
 #include "cpp_main.h"
+#include "MemoryBuffer.h"
 #include "Queue.h"
 #include "OutputDriver.h"
 #include "SSD1306_SPI_Driver.h"
@@ -67,13 +68,16 @@ extern "C" void cpp_main();
 
 void cpp_main()
 {
-//	//NVIC_SystemReset(); //resets system
 
 	inputQueue inputC;
+	MemoryBuffer MBuff1;
 
 	displayQueue OLED_Queue;
+	MemoryBuffer MBuff2;
 
 	waveQueue waveQueue;
+	MemoryBuffer MBuff3;
+
 
     inputMaster input = inputMaster(&inputC,&values);
 
@@ -86,6 +90,13 @@ void cpp_main()
 
     while(1)
 	{
+
+    	MBuff1.check_memory();
+
+    	MBuff2.check_memory();
+
+    	MBuff3.check_memory();
+
 		input.update();
 
 	    channel.updateChannel();

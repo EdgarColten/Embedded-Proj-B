@@ -8,6 +8,8 @@
 #include "inputMaster.h"
 #include "stm32l4xx_hal.h"
 #include <cstdint>
+#include <cassert>
+
 inputMaster::inputMaster(inputQueue* Ch, Semaphore* decide)
 {
 	channel = Ch;
@@ -34,6 +36,7 @@ void inputMaster::update()
 	if(decision != 1) //rush to return
 		return;
 
+	assert(decision == 1);
 	//get current values from inputs
 
 	compareValue = channel_Select.slideGet();

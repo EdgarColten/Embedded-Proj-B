@@ -12,11 +12,11 @@
  * Level 2:
  *  -Rule 6: use IPC to communicate between tasks DONE
  * Level 3:
- * 	-Rule 16: The use of Assertions. TODO
+ * 	-Rule 16: The use of Assertions. DONE look at any function over 10 lines
  * Level 4:
- * 	-Rule 21: Macros shall not be #define'd within a function or a block. TODO:(display by using ctrl + f and looking up #define)
- * 	-Rule 22: #undef shall not be used. TODO: (display by using ctrl + f and looking up #undef)
- * 	-Rule 31: #include directives in a file shall only be preceded by other preprocessor directives or comments. TODO
+ * 	-Rule 21: Macros shall not be #define'd within a function or a block. DONE (display by using ctrl + f and looking up #define)
+ * 	-Rule 22: #undef shall not be used. DONE (display by using ctrl + f and looking up #undef)
+ * 	-Rule 31: #include directives in a file shall only be preceded by other preprocessor directives or comments. DONE
  */
 
 #include <cstdint>
@@ -188,6 +188,8 @@ OutputDriver::OutputDriver(waveQueue* wQ, displayQueue* dQ) // @suppress("Class 
 
 	channel = 1;
 
+	assert(channel == 1);
+
 	calculateAutoReload1();
 	setAutoReload(&htim2,1);
 	generateWave(1);
@@ -216,6 +218,7 @@ void OutputDriver::setAutoReload(TIM_HandleTypeDef* timer,uint8_t chan)
 {
 	if(chan == 1)
 	{
+		assert(chan == 1);
 	    (timer)->Instance->ARR = (autoReload1);
 	    (timer)->Init.Period = (autoReload1);
 		return;
@@ -255,12 +258,10 @@ void OutputDriver::calculateAutoReload1() //Period of the signal //TODO: add an 
 
 void OutputDriver::calculateAutoReload2() //Period of the signal //TODO: add an assert
 {
-
 	uint32_t trig2 = 0;
 	trig2 = freq2 * (SIZE) * (4 + 1);
 	autoReload2 = ((CPU_CLK/trig2) - 1); //TODO:find a way to avoid division
 	return;
-
 }
 
 void OutputDriver::update_Channel()
@@ -401,7 +402,7 @@ void OutputDriver::pack()
 void OutputDriver::delaySet()
 {
 	uint32_t shift = offset * PHASE_SHIFT;
-	//assert(shift >= 0);
+	assert(shift < SIZE);
 
 	Queue shiftedWave;
 
@@ -432,7 +433,6 @@ void OutputDriver::delaySet()
 	{
 		shiftedWave.dequeue(&outWave2[i]);
 	}
-
 	return;
 }
 
