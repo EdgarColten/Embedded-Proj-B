@@ -4,6 +4,12 @@
  *  Created on: Oct 15, 2024
  *      Author: color
  */
+
+/**
+ * @file	inputMaster.h
+ * @brief	Handles all input drivers return values
+ *
+ */
 #include <cstdint>
 #include "main.h"
 #include "stm32l4xx_hal.h"
@@ -17,7 +23,7 @@
 
 #ifndef INC_INPUTMASTER_H_
 #define INC_INPUTMASTER_H_
-class inputMaster { //This class is the master input driver which takes 4 inputs and puts them into a struct to send to Q// // @suppress("Miss copy constructor or assignment operator")
+class inputMaster { // @suppress("Miss copy constructor or assignment operator")
 	inputQueue* channel;
 
 	Semaphore* sem;
@@ -36,9 +42,18 @@ class inputMaster { //This class is the master input driver which takes 4 inputs
 	int8_t delay;
 	int8_t shape;
 public:
-	inputMaster(inputQueue*, Semaphore*);
+	inputMaster(inputQueue*, Semaphore*);//Constructor
+	/**
+	 * @brief Gets values of user-defined input pins and sends them to inputQueue
+	 */
 	void update();
+
+	/**
+	 * @brief Packs input driver return values into a nextState struct (defined in cpp_main.h) to be used by class inputQueue
+	 *
+	 */
 	void masterGet();
+
 };
 
 #endif /* SRC_INPUTMASTER_H_ */

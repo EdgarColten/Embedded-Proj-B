@@ -9,7 +9,19 @@
 #include "stm32l4xx_hal.h"
 #include <cstdint>
 #include <cassert>
+/*
+David JPL Rules:
+Level 2:
+		4: Do not use task delays for task synchronization.
+		7: Do not use direct or indirect recursion
+		10 Use memory protection, safety margins, barrier patterns
+		12: Do not use selective value assignments to elements of an enum list
+Level 3:
+		13: Declare data objects at smallest possible level of scope
+		14: Check the return value of non-void functions, or explicitly cast to (void)
+		15: Check the validity of values passed to functions
 
+*/
 inputMaster::inputMaster(inputQueue* Ch, Semaphore* decide)
 {
 	channel = Ch;
