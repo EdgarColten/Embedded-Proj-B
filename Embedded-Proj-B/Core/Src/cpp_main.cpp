@@ -6,7 +6,6 @@
  */
 ///////////////////////////////////////////////////////////////////
 // Hardware Settings:
-// I2C1 enabled {PA9 SCL and PA10 SDA}
 // DAC1 both channels enabled {PA4 = DAC1_OUT1 and PA5 = DAC1_OUT2}
 //
 // Current Clock config:
@@ -22,11 +21,6 @@
 // Auto Reload = 2731 (100 Hz)
 //
 //
-// GPIO Pins:
-// PA_1 =
-// PA_3 =
-//
-// PB_1 =
 //
 ///////////////////////////////////////////////////////////////////
 
