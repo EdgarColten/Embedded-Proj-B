@@ -103,6 +103,15 @@ public:
 
 	void updateDisplay();
 
+	void update_frequency1(displayValues);
+	void update_amplitude1(displayValues);
+	void update_shape1(displayValues);
+
+	void update_frequency2(displayValues);
+	void update_amplitude2(displayValues);
+	void update_shape2(displayValues);
+
+
 };
 
 

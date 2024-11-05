@@ -25,7 +25,7 @@ class inputMaster { //This class is the master input driver which takes 4 inputs
 	inputSlide channel_Select = inputSlide(channel_select_sw_GPIO_Port,9);
 	inputDriver freq_knob = inputDriver(Freq_knob_A_GPIO_Port,Freq_knob_B_GPIO_Port,12,0);
 	inputDriver amp_knob = inputDriver(Amp_knob_A_GPIO_Port, Amp_knob_B_GPIO_Port, 7, 6);
-	inputDriver delay_knob = inputDriver(Delay_knob_A_GPIO_Port, Delay_knob_B_GPIO_Port,11,10);
+	inputDriver delay_knob = inputDriver(GPIOB, GPIOA,1,11);
 
 	nextState nState;
 

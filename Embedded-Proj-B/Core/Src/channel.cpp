@@ -6,6 +6,7 @@
  */
 
 #include <cstdint>
+#include <cassert>
 
 //Custom headers
 #include "cpp_main.h"
@@ -48,32 +49,38 @@ Level 3:
 Channel::Channel(inputQueue* iQ, waveQueue* wQ) // @suppress("Class members should be properly initialized")
 {
 	//default values for waves
-	myWaveProp.frequency1 = 1;
-	myWaveProp.amplitude1 = 124;
+	myWaveProp.frequency1 = 100;
+	myWaveProp.amplitude1 = 2045;
 	myWaveProp.type1 = sine;
 
-	myWaveProp.amplitude2 = 124;
-	myWaveProp.frequency2 = 1;
+	myWaveProp.amplitude2 = 2045;
+	myWaveProp.frequency2 = 100;
 	myWaveProp.type2 = sine;
 
 	myWaveProp.delay = 0;
 	myWaveProp.channel = 1;
 
 	shapeCount1 = 0;
-	freqCount1 = 0;
-	ampCount1 = 0;
+	freqCount1 = 3;
+	ampCount1 = 15;
 
 	shapeCount2 = 0;
-	freqCount2 = 0;
-	ampCount2 = 0;
+	freqCount2 = 3;
+	ampCount2 = 15;
 
 	delayCount = 0;
+
+	assert(delayCount == 0);
 	chanCount = 1;
 	Input_q = iQ;
 	Wave_q = wQ;
 }
 
 void Channel::setWaveType(){
+
+	if(ns.btn_S == 0)
+		return;
+	assert(ns.btn_S != 0);
 
 	if(ns.btn_S == 1 && chanCount == 1){
 		if(shapeCount1 < 2){
@@ -105,7 +112,7 @@ void Channel::setWaveType(){
 		}
 	}
 
-	else if(ns.btn_S == 1 && chanCount == 2){
+	else if((ns.btn_S == 1) && (chanCount == 2)){
 		if(shapeCount2 < 3){
 			shapeCount2 = shapeCount2 + 1;
 		}
@@ -146,6 +153,9 @@ void Channel::setWaveType(){
 
 void Channel::setFreq(){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
 
+	if(ns.knobF == 0)
+		return;
+	assert(ns.knobF != 0);
 
 	if(chanCount == 1)
 	{
@@ -211,47 +221,50 @@ void Channel::setFreq(){ //when incrementing and decrementing this frequency you
 
 void Channel::setAmp(){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
 
+		if(ns.knobA == 0)
+			return;
+		assert(ns.knobA != 0);
 		if(chanCount == 1)
 		{
-			if(ampCount1 < 33 && ns.knobA == 1){
+			if(ampCount1 < 32 && ns.knobA == 1){
 				ampCount1 = ampCount1 + 1;
 			}
 
-			else if(ampCount1 > 0 && ns.knobA == -1){
+			else if(ampCount1 > 1 && ns.knobA == -1){
 				ampCount1 = ampCount1 + -1;
 			}
 
-			else if(ampCount1 == 33 && ns.knobA == 1){
-				ampCount1 = 33;
+			else if(ampCount1 == 32 && ns.knobA == 1){
+				ampCount1 = 32;
 			}
 
 			else if(ampCount1 == 0 && ns.knobA == -1){
-				ampCount1 = 0;
+				ampCount1 = 1;
 			}
 
-			myWaveProp.amplitude1 = ((ampCount1 * 0.1) + 0.1) * 1240;
+			myWaveProp.amplitude1 = ((ampCount1 * 0.1) + 0.1) * 1260;
 			return;
 		}
 
 		if(chanCount == 2)
 		{
-			if(ampCount2 < 33 && ns.knobA == 1){
+			if(ampCount2 < 31 && ns.knobA == 1){
 				ampCount2 = ampCount2 + 1;
 			}
 
-			else if(ampCount2 > 0 && ns.knobA == -1){
+			else if(ampCount2 > 1 && ns.knobA == -1){
 				ampCount2 = ampCount2 + -1;
 			}
 
-			else if(ampCount2 == 33 && ns.knobA == 1){
-				ampCount2 = 33;
+			else if(ampCount2 == 31 && ns.knobA == 1){
+				ampCount2 = 31;
 			}
 
-			else if(ampCount2 == 0 && ns.knobA == -1){
-				ampCount2 = 0;
+			else if(ampCount2 == 1 && ns.knobA == -1){
+				ampCount2 = 1;
 			}
 
-			myWaveProp.amplitude2 = ((ampCount2 * 0.1) + 0.1) * 1240;
+			myWaveProp.amplitude2 = ((ampCount2 * 0.1) + 0.1) * 1260;
 			return;
 		}
 
@@ -261,26 +274,37 @@ void Channel::setAmp(){ //when incrementing and decrementing this frequency you 
 void Channel::setDelay(){ //when incrementing and decrementing this frequency you will need a cases for the position of the knobs
 	if(chanCount == 2)
 	{
-		if(ns.knobD == 1 && delayCount < 7){
+		if(ns.knobD == 0)
+			return;
+		assert(ns.knobD != 0);
+
+		if(delayCount < 7 && ns.knobD == 1){
 			delayCount = delayCount + 1;
+			myWaveProp.delay = delayCount;
+			return;
 		}
 
-		else if(ns.knobD == -1 && delayCount > 0){
+		else if(delayCount > 0 && ns.knobD == -1 ){
 			delayCount = delayCount - 1;
+			myWaveProp.delay = delayCount;
+			return;
 		}
 
-		else if(ns.knobD == 1 && delayCount == 7){
+		else if(delayCount == 7 && ns.knobD == 1){
 			delayCount = 7;
+			myWaveProp.delay = delayCount;
+			return;
 		}
 
-		else if(ns.knobD == -1 && delayCount == 0){
+		else if(delayCount == 0 && ns.knobD == -1 ){
 			delayCount = 0;
+			myWaveProp.delay = delayCount;
+			return;
 		}
-		myWaveProp.delay = delayCount;
-		return;
+
 	}
-	else
-		return;
+
+
 }
 
 
@@ -297,6 +321,8 @@ void Channel::updateChannel(){
 
 	chanCount = ns.sw_select;
 
+	assert(chanCount == ns.sw_select);
+
 	setFreq();
 	setAmp();
 	setDelay();
@@ -307,15 +333,7 @@ void Channel::updateChannel(){
 	Wave_q->enqueue(myWaveProp);
 }
 
-/*
-void Channel::cpChannel(waveProp x){ //x is ch1 so the delay value should be 0. This may not give the correct delay
-		myWaveProp.type = x.type;
-		myWaveProp.frequency = x.frequency;
-		myWaveProp.amplitude = x.amplitude;
-		myWaveProp.delay = x.delay;
-		return;
-}
-*/
+
 
 
 

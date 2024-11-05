@@ -7,6 +7,8 @@
 
 
 #include <cstdint>
+#include <cassert>
+
 #include <stdio.h>
 #include "main.h"
 #include "displayQueue.h"
@@ -18,6 +20,7 @@ displayQueue::displayQueue(){
 
 bool displayQueue::enqueue(displayValues msg){ //works with the tail
     bool ok = false;
+    assert(ok == false);
     if ((tail == BUFFER_END && head == 0) || (tail + 1) == head){ //This means that the buffer will be "empty" and we will be unable to dequeue
         ok = false;
     }
@@ -37,6 +40,7 @@ bool displayQueue::enqueue(displayValues msg){ //works with the tail
 
 bool displayQueue::dequeue(displayValues *msg){ //works with the head
     bool ok = false;
+    assert(ok == false);
     if (head == tail) {
         ok = false;
     }

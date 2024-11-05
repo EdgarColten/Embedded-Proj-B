@@ -1,6 +1,7 @@
 //Colten Queue
 
 #include "waveQueue.h"
+#include <cassert>
 
 waveQueue::waveQueue()
 {
@@ -9,12 +10,13 @@ waveQueue::waveQueue()
 
 bool waveQueue::enqueue(waveProp msg){
 	//if queue is full
-	if(tail + 1 == head || (tail == QSIZE && head == 0)){
+	if((tail + 1 == head) || (tail == QSIZE && head == 0)){
 		return false;
 	}
 	//for empty queue
 	if(head == -1){
 		head = 0;
+		assert(head == 0);
 	}
 
 	//Next Position
@@ -47,6 +49,7 @@ bool waveQueue::dequeue(waveProp* msg){
 	else{
 		if(head == (QSIZE - 1)){
 			head = 0;
+			assert(head == 0);
 		}
 		else{
 			head++;

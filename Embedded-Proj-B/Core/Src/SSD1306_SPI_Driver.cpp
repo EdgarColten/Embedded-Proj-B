@@ -33,6 +33,7 @@ OLED::OLED(displayQueue* dQ){ // @suppress("Class members should be properly ini
 		}
 	}
 
+
 	SSD1306_init();
 	set_OLED();
 
@@ -75,6 +76,7 @@ void OLED::set_OLED()
 	else if(channel == 2)
 		send_data(two);
 
+	assert((channel == 1) || (channel == 2));
 	//page 2 & 3
 	set_column_address(12,19);
 	set_page_address(2,3);
@@ -139,7 +141,7 @@ void OLED::set_OLED()
 
 void OLED::updateChannel_1()
 {
-	//clearChannel();
+	assert(1 == 1);
 
 	//Current Channel display
 	set_column_address(30,37);
@@ -190,7 +192,8 @@ void OLED::updateChannel_1()
 }
 void OLED::updateChannel_2()
 {
-	//clearChannel();
+
+	assert(1 == 1);
 
 	//Current Channel display
 	set_column_address(30,37);
@@ -246,6 +249,8 @@ void OLED::updateDisplay()
 
 	if(notEmpty == false)
 		return;
+
+	assert(notEmpty == true || notEmpty == false);
 
 	channel = dValue.channel;
 
@@ -1074,7 +1079,11 @@ void OLED::send_command(uint8_t command)
 	LL_GPIO_ResetOutputPin(SSD1306_DC_GPIO_Port, SSD1306_DC_Pin);
 	LL_SPI_TransmitData8(SPI1, command);
 	while(LL_SPI_IsActiveFlag_TXE(SPI1)==0);
-
+	//While loop has verifiable bounds at 0.2 us
+	//This number was achieved by the following
+	// 40 Mbit/s and sending 8 bits
+	// thus 40,000,000 / 8 = 5,000,000 per second
+	// thus 1 / 5,000,000 = 0.000002 secs for the loop to terminate
 	return;
 }
 
@@ -1084,10 +1093,13 @@ void OLED::send_data(uint8_t* data)
 
 	for(uint32_t i = 0; i < CHARACTER_SIZE; i++)
 	{
-
 		LL_SPI_TransmitData8(SPI1, data[i]);
 		while(LL_SPI_IsActiveFlag_TXE(SPI1)==0);
-
+		//While loop has verifiable bounds at 0.2 us
+		//This number was achieved by the following
+		// 40 Mbit/s and sending 8 bits
+		// thus 40,000,000 / 8 = 5,000,000 per second
+		// thus 1 / 5,000,000 = 0.000002 secs for the loop to terminate
 	}
 	return;
 
@@ -1108,6 +1120,7 @@ void OLED::SSD1306_init()
 		SPI_CS_count = 1;
 	}
 
+	assert(SPI_CS_count == 1);
 
     send_command(SSD1306_COMMAND_DISPLAY_OFF); //set display off
 
@@ -1186,6 +1199,7 @@ void OLED::clear_display()
 	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
 	};
 
+	assert(clear[0][0] == 0);
 
 	for(int32_t i = 0; i < 8; i++)
 	{
@@ -1198,55 +1212,3 @@ void OLED::clear_display()
 	}
 	return;
 }
-
-void OLED::clearChannel()
-{
-	//Current Channel display
-	set_column_address(30,37);
-	set_page_address(0,1);
-	send_data(blank);
-
-	//Frequency display
-	set_column_address(61,68);
-	set_page_address(2,3);
-	send_data(blank);
-
-	set_column_address(70,77);
-	set_page_address(2,3);
-	send_data(blank);
-
-	set_column_address(79,86);
-	set_page_address(2,3);
-	send_data(blank);
-
-	set_column_address(88,95);
-	set_page_address(2,3);
-	send_data(blank);
-
-	//Amplitude Display
-	set_column_address(61,68);
-	set_page_address(4,5);
-	send_data(blank);
-
-	set_column_address(70,77);
-	set_page_address(4,5);
-	send_data(blank);
-
-	set_column_address(79,86);
-	set_page_address(4,5);
-	send_data(blank);
-
-	//Wave display
-	set_column_address(70,77);
-	set_page_address(6,7);
-	send_data(blank);
-
-	set_column_address(78,85);
-	set_page_address(6,7);
-	send_data(blank);
-
-
-	return;
-}
-
-

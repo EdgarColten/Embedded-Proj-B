@@ -8,6 +8,8 @@
 #include "inputDriver.h"
 #include "stm32l4xx_hal.h"
 #include <cstdint>
+#include <cassert>
+
 //just doing this for git testing purposes 24
     inputDriver::inputDriver(GPIO_TypeDef* gpioA,GPIO_TypeDef* gpioB, uint32_t pNum, uint32_t pNum2)
     {
@@ -22,6 +24,7 @@
     {
         if(((gpio_addressA -> IDR & (1<<pinNumA)) == 0) && ((gpio_addressB -> IDR & (1<<pinNumB)) == 0)){
             peState = 1;//pestate = 1 if A&B
+            assert(peState == 1);
         }
         if(peState == 1)
         {
