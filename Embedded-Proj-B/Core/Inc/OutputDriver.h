@@ -4,7 +4,10 @@
  *  Created on: Sep 26, 2024
  *      Author: LogMa
  */
-
+/**
+ * @file "outputDriver.h"
+ * @brief Output driver code
+ */
 #include <cstdint>
 #include "main.h"
 #include "stm32l4xx_hal.h"
@@ -51,6 +54,7 @@ private:
 	uint32_t offset;
 	uint32_t autoReload2;
 
+	uint32_t oldFreq2_Delay;
 	uint8_t channel;
 
 	//Output wave tables
@@ -109,20 +113,73 @@ private:
 
 public:
 	OutputDriver(waveQueue*,displayQueue*);
+	/**
+	 * @brief Sends update values and runs both channels of the DAC.
+	 * This function dequeues values sent to it by the application layer and sets the DAC's values based upon that.
+	 * This funciton will adjust a timers autoreload value depending on the change in frequency.
+	 * This funciton enqueues data into the oledQueue pointer to then be sent to the display driver.
+	 * This function will test channel 1 values being dequeued for their validaty prior to performing any calculations. 
+	 */
 	void update_Channel();
+	/**
+	 * @brief calculates the auto reload value for timer 2.
+	 * This function will utilze the #define SIZE and the #define CPU_CLK in this header file to calculate the needed 
+	 * autoreload value need to achieve the desired frequency for channel 1.
+	 * This functions bases the calculation off of the value of frequency2 and the prescalar of 4 + 1.
+	 */
 	void calculateAutoReload1();
+	/**
+	 * @brief calculates the auto reload value for timer 6.
+	 * This function will utilze the #define SIZE and the #define CPU_CLK in this header file to calculate the needed 
+	 * autoreload value need to achieve the desired frequency for channel 6.
+	 * This functions bases the calculation off of the value of frequency2 and the prescalar of 4 + 1.
+	 */
 	void calculateAutoReload2();
-
-
+	/**
+	 * @brief Sets the values related with channel 1
+	 * This function sets the values of freq1, amp1, shape1.
+	 * 
+	 * @param x signal A waveProp (waveProp is defined in ccp_main.h) struct that holds the values of freq1, amp1, shape1.
+	 */
 	void setAttributes1(waveProp);
+	/**
+	 * @brief Sets the values related with channel 2
+	 * This function sets the values of freq2, amp2, shape2.
+	 * 
+	 * @param x signal A waveProp (waveProp is defined in ccp_main.h) struct that holds the values of freq2, amp2, shape2.
+	 */
 	void setAttributes2(waveProp);
-
+	/**
+	 * @brief Modifys the constant wave values and puts those values in one of the outWave arrays.
+	 * This function will determine which wave shape the channel is set to.
+	 * This function will then multiple the amplitude to the corresponding predefined array and set these values to outWave1 or outWave2.
+	 * @param x chan An unsigned integer that determines what channel the wave should be generated on.
+	 */
 	void generateWave(uint8_t);
+	/**
+	 * @brief Sets the auto reload value.
+	 * This function assigns a value for autoreload for a specified timer.
+	 * 
+	 * @param x timer A pointer to a hardware timer that will get the new autoreload value.
+	 * @param x chan An unsigned integer used to determine which channel the should get which autoreload value.
+	 */
 	void setAutoReload(TIM_HandleTypeDef*,uint8_t);
-	void resetCounter(TIM_HandleTypeDef*,uint8_t);
-
+	/**
+	 * @brief Resets the counter of a timer to 0
+	 * 
+	 * @param x timer A pointer to a hardware timer that should be set to 0.
+	 */
+	void resetCounter(TIM_HandleTypeDef*);
+	/**
+	 * @brief Shifts the array of outWave1 by the desired offset and sets outWave2 with the shifted values.
+	 * This function shifts values in the outWave1 array by offset multiplied with #define SHIFT in this header file.
+	 * This function enqueues the shifted values in a temporary queue and then dequeues them into outWave2.
+	 */
 	void delaySet();
-
+	/**
+	 * @brief Packs the values of channel 1 and channel 2 into a struct to be sent to the display driver.
+	 * This function packs the following values: freq1, amp1, shape1, freq2, amp2, shape2, offset and channel.
+	 */
 	void pack();
 
 };

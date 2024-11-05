@@ -31,7 +31,6 @@
 #include "cpp_main.h"
 #include "Queue.h"
 #include "OutputDriver.h"
-#include "SSD1306_I2C_Driver.h"
 #include "displayQueue.h"
 #include "Queue.h"
 
@@ -39,12 +38,6 @@
 extern DAC_HandleTypeDef hdac1;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim6;
-
-
-//NOTE: 3.3v = 4095
-//NOTE: 1v = 1240
-//NOTE: 272 = 1 kHz
-//NOTE: 2731 = 100 Hz
 
 //TESTING FOR cpp_main();
 /*
@@ -186,6 +179,8 @@ OutputDriver::OutputDriver(waveQueue* wQ, displayQueue* dQ) // @suppress("Class 
 	oldAmp2 = amp2;
 	oldShape2 = shape2;
 
+	oldFreq2_Delay = freq2;
+
 	channel = 1;
 
 	assert(channel == 1);
@@ -208,17 +203,24 @@ OutputDriver::OutputDriver(waveQueue* wQ, displayQueue* dQ) // @suppress("Class 
 	oledQueue->enqueue(dValues);
 }
 
-void OutputDriver::resetCounter(TIM_HandleTypeDef* timer,uint8_t chan)
+void OutputDriver::resetCounter(TIM_HandleTypeDef* timer)
 {
+	if((timer != &htim2) && (timer != &htim6))
+		return;
 	(timer)->Instance->CNT = 0;
 }
 
 //setting the Auto Reload value
 void OutputDriver::setAutoReload(TIM_HandleTypeDef* timer,uint8_t chan)
 {
+	if((timer != &htim2) && (timer != &htim6))
+		return;
+
+	if((chan != 1) && chan != 2)
+		return;
+
 	if(chan == 1)
 	{
-		assert(chan == 1);
 	    (timer)->Instance->ARR = (autoReload1);
 	    (timer)->Init.Period = (autoReload1);
 		return;
@@ -251,7 +253,7 @@ void OutputDriver::setAttributes2(waveProp signal)
 void OutputDriver::calculateAutoReload1() //Period of the signal //TODO: add an assert
 {
 	uint32_t trig1 = 0;
-	trig1 = freq1 * (SIZE);
+	trig1 = freq1 * (SIZE) * (4 + 1);
 	autoReload1 = ((CPU_CLK/trig1) - 1); //TODO:find a way to avoid division
 	return;
 }
@@ -264,6 +266,7 @@ void OutputDriver::calculateAutoReload2() //Period of the signal //TODO: add an 
 	return;
 }
 
+
 void OutputDriver::update_Channel()
 {
 	waveProp signal;
@@ -274,21 +277,21 @@ void OutputDriver::update_Channel()
 		return;
 
 	channel = signal.channel;
-
-	////////////////////Testing dequeued value//////////////////////
-	if((signal.frequency1 > 0 && signal.frequency1 <= 1000) && (signal.amplitude1 > 0 && signal.amplitude1 < 4033) && (signal.type1 >= 0 && signal.type1 < 3) && (signal.delay >= 0 && signal.delay < 8))
-	{
-		GPIOB->ODR |= (1 << 5);// PB_5
-		GPIOB->ODR &= ~(1 << 4); //PB_4
-	}
-	else
-	{
-		GPIOB->ODR |= (1 << 4); //PB_4
-		GPIOB->ODR &= ~(1 << 5);// PB_5
-
-		return;
-	}
-	////////////////////Testing dequeued value//////////////////////
+//
+//	////////////////////Testing dequeued value//////////////////////
+//	if((signal.frequency1 > 0 && signal.frequency1 <= 1000) && (signal.amplitude1 > 0 && signal.amplitude1 < 4033) && (signal.type1 >= 0 && signal.type1 < 3) && (signal.delay >= 0 && signal.delay < 8))
+//	{
+//		GPIOB->ODR |= (1 << 5);// PB_5
+//		GPIOB->ODR &= ~(1 << 4); //PB_4
+//	}
+//	else
+//	{
+//		GPIOB->ODR |= (1 << 4); //PB_4
+//		GPIOB->ODR &= ~(1 << 5);// PB_5
+//
+//		return;
+//	}
+//	////////////////////Testing dequeued value//////////////////////
 	setAttributes1(signal);
 	setAttributes2(signal);
 
@@ -303,7 +306,7 @@ void OutputDriver::update_Channel()
 		setAutoReload(&htim2,1);
 		generateWave(1);
 
-		resetCounter(&htim2,1);
+		resetCounter(&htim2);
 	}
 
 
@@ -320,7 +323,7 @@ void OutputDriver::update_Channel()
 		setAutoReload(&htim6,2);
 		generateWave(2);
 
-		resetCounter(&htim6,2);
+		resetCounter(&htim6);
 	}
 
 
@@ -329,15 +332,17 @@ void OutputDriver::update_Channel()
 
 		oldShape2 = delay;
 		offset = signal.delay;
+		oldFreq2_Delay = freq1;
+
 		generateWave(1);
 
-
+		setAutoReload(&htim2,1);
 		setAutoReload(&htim6,1);
 		delaySet();
 
 
-		resetCounter(&htim6,2);
-		resetCounter(&htim2,1);
+		resetCounter(&htim6);
+		resetCounter(&htim2);
 
 		HAL_DAC_Stop_DMA(&hdac1, DAC1_CHANNEL_1);
 		HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave1, SIZE, DAC_ALIGN_12B_R);
@@ -352,8 +357,20 @@ void OutputDriver::update_Channel()
 
 		delaySet();
 
-		resetCounter(&htim6,2);
-		resetCounter(&htim2,1);
+		setAutoReload(&htim6,1);
+
+		resetCounter(&htim6);
+		resetCounter(&htim2);
+
+		if(oldFreq2_Delay != freq1)
+		{
+			oldFreq2_Delay = freq1;
+			HAL_DAC_Stop_DMA(&hdac1, DAC1_CHANNEL_1);
+			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave1, SIZE, DAC_ALIGN_12B_R);
+
+			HAL_DAC_Stop_DMA(&hdac1, DAC1_CHANNEL_2);
+			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave2, SIZE, DAC_ALIGN_12B_R);
+		}
 
 	}
 
@@ -365,8 +382,8 @@ void OutputDriver::update_Channel()
 		oldShape1 = shape1;
 		oldShape2 = shape2;
 
-		resetCounter(&htim6,2);
-		resetCounter(&htim2,1);
+		resetCounter(&htim6);
+		resetCounter(&htim2);
 
 		HAL_DAC_Stop_DMA(&hdac1, DAC1_CHANNEL_2);
 		HAL_DAC_Stop_DMA(&hdac1, DAC1_CHANNEL_1);

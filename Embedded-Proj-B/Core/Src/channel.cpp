@@ -226,7 +226,7 @@ void Channel::setAmp(){ //when incrementing and decrementing this frequency you 
 		assert(ns.knobA != 0);
 		if(chanCount == 1)
 		{
-			if(ampCount1 < 32 && ns.knobA == 1){
+			if(ampCount1 < 31 && ns.knobA == 1){
 				ampCount1 = ampCount1 + 1;
 			}
 
@@ -234,8 +234,8 @@ void Channel::setAmp(){ //when incrementing and decrementing this frequency you 
 				ampCount1 = ampCount1 + -1;
 			}
 
-			else if(ampCount1 == 32 && ns.knobA == 1){
-				ampCount1 = 32;
+			else if(ampCount1 == 31 && ns.knobA == 1){
+				ampCount1 = 31;
 			}
 
 			else if(ampCount1 == 0 && ns.knobA == -1){

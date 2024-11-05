@@ -104,5 +104,7 @@ void cpp_main()
 		Signal.update_Channel();
 
 		display.updateDisplay();
+
+		GPIOB->ODR ^= (1 << 5);
 	}
 }
