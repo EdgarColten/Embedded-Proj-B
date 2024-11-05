@@ -52,6 +52,12 @@ extern uint8_t Q[16];
 
 extern uint8_t H[16];
 
+extern uint8_t P[16];
+
+extern uint8_t S[16];
+
+extern uint8_t M[16];
+
 extern uint8_t SQUARE[16];
 
 extern uint8_t SINE1[16];
@@ -75,5 +81,6 @@ extern uint8_t power[16];
 
 extern uint8_t vertLine[16];
 
+extern uint8_t decimal[16];
 
 #endif /* INC_CHARACTERS_H_ */

@@ -17,13 +17,12 @@
 #include "displayQueue.h"
 
 
-OLED::OLED(uint8_t chann,displayQueue* dQ){ // @suppress("Class members should be properly initialized")
+OLED::OLED(displayQueue* dQ){ // @suppress("Class members should be properly initialized")
 	queue = dQ;
-	channel = chann;
-	startUpF = false;
-	startUpW = false;
+	channel = 1;
 	SPI_CS_count = 0;
 	SPI_RST_Count = 0;
+
 
 	for(int32_t i = 0; i < 6; i++)
 	{
@@ -34,16 +33,23 @@ OLED::OLED(uint8_t chann,displayQueue* dQ){ // @suppress("Class members should b
 		}
 	}
 
+
 	SSD1306_init();
 	set_OLED();
+
+
+	updateChannel_1();
+	//updateChannel_2();
+
+
 }
 
-void OLED::set_partial_code(uint8_t* value, uint8_t position)
+void OLED::set_partial_code(uint8_t* reading,uint8_t* value)
 {
 
 	for(int32_t i = 0; i < 16; i++)
 	{
-		code[position][i] = value[i];
+		reading[i] = value[i];
 	}
 	return;
 }
@@ -61,10 +67,16 @@ void OLED::set_OLED()
 	set_page_address(0,1);
 	send_data(H);
 
+	//so that this value can change
 	set_column_address(30,37);
 	set_page_address(0,1);
-	send_data(one);
 
+	if(channel == 1)
+		send_data(one);
+	else if(channel == 2)
+		send_data(two);
+
+	assert((channel == 1) || (channel == 2));
 	//page 2 & 3
 	set_column_address(12,19);
 	set_page_address(2,3);
@@ -89,100 +101,143 @@ void OLED::set_OLED()
 	//page 4 & 5
 	set_column_address(12,19);
 	set_page_address(4,5);
-	send_data(C);
+	send_data(A);
 
 	set_column_address(21,28);
 	set_page_address(4,5);
-	send_data(H);
+	send_data(M);
 
-	set_column_address(30,37);
+	set_column_address(31,38);
 	set_page_address(4,5);
-	send_data(two);
+	send_data(P);
+
+	set_column_address(50,57);
+	set_page_address(4,5);
+	send_data(equal);
 
 	//page 6 & 7
 	set_column_address(12,19);
 	set_page_address(6,7);
-	send_data(F);
+	send_data(S);
 
 	set_column_address(21,28);
 	set_page_address(6,7);
-	send_data(R);
+	send_data(H);
 
 	set_column_address(30,37);
 	set_page_address(6,7);
-	send_data(E);
+	send_data(A);
 
 	set_column_address(39,46);
 	set_page_address(6,7);
-	send_data(Q);
+	send_data(P);
 
-	set_column_address(50,57);
+	set_column_address(48,55);
 	set_page_address(6,7);
-	send_data(equal);
+	send_data(E);
 
 	return;
 }
 
 void OLED::updateChannel_1()
 {
-	clearChannel_1();
+	assert(1 == 1);
 
-	//frequency display
+	//Current Channel display
+	set_column_address(30,37);
+	set_page_address(0,1);
+	send_data(one);
+
+	//Frequency display
 	set_column_address(61,68);
 	set_page_address(2,3);
-	send_data(code[0]);
+	send_data(frequency1[0]);
 
 	set_column_address(70,77);
 	set_page_address(2,3);
-	send_data(code[1]);
+	send_data(frequency1[1]);
 
 	set_column_address(79,86);
 	set_page_address(2,3);
-	send_data(code[2]);
+	send_data(frequency1[2]);
 
 	set_column_address(88,95);
 	set_page_address(2,3);
-	send_data(code[3]);
+	send_data(frequency1[3]);
+
+	//Amplitude Display
+	set_column_address(61,68);
+	set_page_address(4,5);
+	send_data(amplitude1[0]);
+
+	set_column_address(70,77);
+	set_page_address(4,5);
+	send_data(amplitude1[1]);
+
+	set_column_address(79,86);
+	set_page_address(4,5);
+	send_data(amplitude1[2]);
 
 	//Wave display
-	set_column_address(112,119);
-	set_page_address(2,3);
-	send_data(code[4]);
+	set_column_address(70,77);
+	set_page_address(6,7);
+	send_data(shape1[0]);
 
-	set_column_address(120,127);
-	set_page_address(2,3);
-	send_data(code[5]);
+	set_column_address(78,85);
+	set_page_address(6,7);
+	send_data(shape1[1]);
+
 
 	return;
 }
 void OLED::updateChannel_2()
 {
-	clearChannel_2();
 
+	assert(1 == 1);
+
+	//Current Channel display
+	set_column_address(30,37);
+	set_page_address(0,1);
+	send_data(two);
+
+	//Frequency display
 	set_column_address(61,68);
-	set_page_address(6,7);
-	send_data(code[0]);
+	set_page_address(2,3);
+	send_data(frequency2[0]);
 
 	set_column_address(70,77);
-	set_page_address(6,7);
-	send_data(code[1]);
+	set_page_address(2,3);
+	send_data(frequency2[1]);
 
 	set_column_address(79,86);
-	set_page_address(6,7);
-	send_data(code[2]);
+	set_page_address(2,3);
+	send_data(frequency2[2]);
 
 	set_column_address(88,95);
-	set_page_address(6,7);
-	send_data(code[3]);
+	set_page_address(2,3);
+	send_data(frequency2[3]);
 
+	//Amplitude Display
+	set_column_address(61,68);
+	set_page_address(4,5);
+	send_data(amplitude2[0]);
 
-	set_column_address(112,119);
-	set_page_address(6,7);
-	send_data(code[4]);
+	set_column_address(70,77);
+	set_page_address(4,5);
+	send_data(amplitude2[1]);
 
-	set_column_address(120,127);
+	set_column_address(79,86);
+	set_page_address(4,5);
+	send_data(amplitude2[2]);
+
+	//Wave display
+	set_column_address(70,77);
 	set_page_address(6,7);
-	send_data(code[5]);
+	send_data(shape2[0]);
+
+	set_column_address(78,85);
+	set_page_address(6,7);
+	send_data(shape2[1]);
 
 	return;
 }
@@ -195,966 +250,827 @@ void OLED::updateDisplay()
 	if(notEmpty == false)
 		return;
 
+	assert(notEmpty == true || notEmpty == false);
 
+	channel = dValue.channel;
 
-	if(storedValues.F != dValue.F && startUpF == true) //indicates a new frequency
+	if((storedValues.F1 != dValue.F1) || (storedValues.F2 != dValue.F2))
 	{
-		storedValues.F = dValue.F;
-
-		waveFreq[0] = (storedValues.F - (storedValues.F%1000)) / 1000;
-		waveFreq[1] = (storedValues.F%1000 - storedValues.F%100) /100;
-		waveFreq[2] = (((storedValues.F%1000)%100) - (storedValues.F%10)) /10;
-		waveFreq[3] = (((storedValues.F%1000)%100)%10);
-
-		switch(waveFreq[0])
+		if((storedValues.F1 != dValue.F1))
 		{
-			case 0:
-			{
-				set_partial_code(blank,0);
-				break;
-			}
-			case 1:
-			{
-				set_partial_code(one,0);
-				break;
-			}
+			storedValues.F1 = dValue.F1;
 
-			default:
-			{
-				set_partial_code(blank,0);
-				break;
-			}
+			waveFreq[0] = (storedValues.F1 - (storedValues.F1%1000)) / 1000;
+			waveFreq[1] = (storedValues.F1%1000 - storedValues.F1%100) /100;
+			waveFreq[2] = (((storedValues.F1%1000)%100) - (storedValues.F1%10)) /10;
+			waveFreq[3] = (((storedValues.F1%1000)%100)%10);
 
-		}
 
-		switch(waveFreq[1])
-		{
-			case 0:
+
+			switch(waveFreq[0])
 			{
-				if(waveFreq[0] == 0)
+				case 0:
 				{
-					set_partial_code(blank,1);
+					set_partial_code(frequency1[0],blank);
 					break;
 				}
-				else
+				case 1:
 				{
-					set_partial_code(zero,1);
+					set_partial_code(frequency1[0],one);
+					break;
+				}
+
+				default:
+				{
+					set_partial_code(frequency1[0],blank);
 					break;
 				}
 
 			}
-			case 1:
+
+			switch(waveFreq[1])
 			{
-
-				set_partial_code(one,1);
-				break;
-			}
-			case 2:
-			{
-
-				set_partial_code(two,1);
-				break;
-			}
-			case 3:
-			{
-
-				set_partial_code(three,1);
-				break;
-			}
-			case 4:
-			{
-
-				set_partial_code(four,1);
-				break;
-			}
-			case 5:
-			{
-
-				set_partial_code(five,1);
-				break;
-			}
-			case 6:
-			{
-
-				set_partial_code(six,1);
-				break;
-			}
-			case 7:
-			{
-
-				set_partial_code(seven,1);
-				break;
-			}
-			case 8:
-			{
-
-				set_partial_code(eight,1);
-				break;
-			}
-			case 9:
-			{
-
-				set_partial_code(nine,1);
-				break;
-			}
-
-			default:
-			{
-				set_partial_code(blank,1);
-				break;
-			}
-
-		}
-
-		switch(waveFreq[2])
-		{
-			case 0:
-			{
-				if(waveFreq[1] == 0 && waveFreq[0] == 0)
+				case 0:
 				{
-					set_partial_code(blank,2);
+					if(waveFreq[0] == 0)
+					{
+						set_partial_code(frequency1[1],blank);
+						break;
+					}
+					else
+					{
+						set_partial_code(frequency1[1],zero);
+						break;
+					}
+
+				}
+				case 1:
+				{
+					set_partial_code(frequency1[1],one);
+					break;
+				}
+				case 2:
+				{
+					set_partial_code(frequency1[1],two);
+					break;
+				}
+				case 3:
+				{
+					set_partial_code(frequency1[1],three);
+					break;
+				}
+				case 4:
+				{
+					set_partial_code(frequency1[1],four);
+					break;
+				}
+				case 5:
+				{
+					set_partial_code(frequency1[1],five);
+					break;
+				}
+				case 6:
+				{
+					set_partial_code(frequency1[1],six);
+					break;
+				}
+				case 7:
+				{
+					set_partial_code(frequency1[1],seven);
+					break;
+				}
+				case 8:
+				{
+					set_partial_code(frequency1[1],eight);
+					break;
+				}
+				case 9:
+				{
+					set_partial_code(frequency1[1],nine);
 					break;
 				}
 
-				set_partial_code(zero,2);
-				break;
-			}
-			case 1:
-			{
-				set_partial_code(one,2);
-				break;
-			}
-			case 2:
-			{
-				set_partial_code(two,2);
-				break;
-			}
-			case 3:
-			{
-				set_partial_code(three,2);
-				break;
-			}
-			case 4:
-			{
-				set_partial_code(four,2);
-				break;
-			}
-			case 5:
-			{
-				set_partial_code(five,2);
-				break;
-			}
-			case 6:
-			{
-				set_partial_code(six,2);
-				break;
-			}
-			case 7:
-			{
-				set_partial_code(seven,2);
-				break;
-			}
-			case 8:
-			{
-				set_partial_code(eight,2);
-				break;
-			}
-			case 9:
-			{
-				set_partial_code(nine,2);
-				break;
+				default:
+				{
+					set_partial_code(frequency1[1],blank);
+					break;
+				}
+
 			}
 
-			default:
+			switch(waveFreq[2])
 			{
-				set_partial_code(blank,2);
-				break;
+				case 0:
+				{
+					if(waveFreq[1] == 0 && waveFreq[0] == 0)
+					{
+						set_partial_code(frequency1[2],blank);
+						break;
+					}
+
+					set_partial_code(frequency1[2],zero);
+					break;
+				}
+				case 1:
+				{
+					set_partial_code(frequency1[2],one);
+					break;
+				}
+				case 2:
+				{
+					set_partial_code(frequency1[2],two);
+					break;
+				}
+				case 3:
+				{
+					set_partial_code(frequency1[2],three);
+					break;
+				}
+				case 4:
+				{
+					set_partial_code(frequency1[2],four);
+					break;
+				}
+				case 5:
+				{
+					set_partial_code(frequency1[2],five);
+					break;
+				}
+				case 6:
+				{
+					set_partial_code(frequency1[2],six);
+					break;
+				}
+				case 7:
+				{
+					set_partial_code(frequency1[2],seven);
+					break;
+				}
+				case 8:
+				{
+					set_partial_code(frequency1[2],eight);
+					break;
+				}
+				case 9:
+				{
+					set_partial_code(frequency1[2],nine);
+					break;
+				}
+
+				default:
+				{
+					set_partial_code(frequency1[2],blank);
+					break;
+				}
+
+			}
+
+
+			switch(waveFreq[3])
+			{
+				case 0:
+				{
+					set_partial_code(frequency1[3],zero);
+					break;
+				}
+				case 1:
+				{
+					set_partial_code(frequency1[3],one);
+					break;
+				}
+				case 2:
+				{
+					set_partial_code(frequency1[3],two);
+					break;
+				}
+				case 3:
+				{
+					set_partial_code(frequency1[3],three);
+					break;
+				}
+				case 4:
+				{
+					set_partial_code(frequency1[3],four);
+					break;
+				}
+				case 5:
+				{
+					set_partial_code(frequency1[3],five);
+					break;
+				}
+				case 6:
+				{
+					set_partial_code(frequency1[3],six);
+					break;
+				}
+				case 7:
+				{
+					set_partial_code(frequency1[3],seven);
+					break;
+				}
+				case 8:
+				{
+					set_partial_code(frequency1[3],eight);
+					break;
+				}
+				case 9:
+				{
+					set_partial_code(frequency1[3],nine);
+					break;
+				}
+
+				default:
+				{
+					set_partial_code(frequency1[3],blank);
+					break;
+				}
+
 			}
 
 		}
 
-		switch(waveFreq[3])
+		if((storedValues.F2 != dValue.F2))
 		{
-			case 0:
+			storedValues.F2 = dValue.F2;
+
+			waveFreq[0] = (storedValues.F2 - (storedValues.F2%1000)) / 1000;
+			waveFreq[1] = (storedValues.F2%1000 - storedValues.F2%100) /100;
+			waveFreq[2] = (((storedValues.F2%1000)%100) - (storedValues.F2%10)) /10;
+			waveFreq[3] = (((storedValues.F2%1000)%100)%10);
+
+
+
+			switch(waveFreq[0])
 			{
-				set_partial_code(zero,3);
-				break;
-			}
-			case 1:
-			{
-				set_partial_code(one,3);
-				break;
-			}
-			case 2:
-			{
-				set_partial_code(two,3);
-				break;
-			}
-			case 3:
-			{
-				set_partial_code(three,3);
-				break;
-			}
-			case 4:
-			{
-				set_partial_code(four,3);
-				break;
-			}
-			case 5:
-			{
-				set_partial_code(five,3);
-				break;
-			}
-			case 6:
-			{
-				set_partial_code(six,3);
-				break;
-			}
-			case 7:
-			{
-				set_partial_code(seven,3);
-				break;
-			}
-			case 8:
-			{
-				set_partial_code(eight,3);
-				break;
-			}
-			case 9:
-			{
-				set_partial_code(nine,3);
-				break;
+				case 0:
+				{
+					set_partial_code(frequency2[0],blank);
+					break;
+				}
+				case 1:
+				{
+					set_partial_code(frequency2[0],one);
+					break;
+				}
+
+				default:
+				{
+					set_partial_code(frequency2[0],blank);
+					break;
+				}
 			}
 
-			default:
+			switch(waveFreq[1])
 			{
-				set_partial_code(blank,3);
-				break;
+				case 0:
+				{
+					if(waveFreq[0] == 0)
+					{
+						set_partial_code(frequency2[1],blank);
+						break;
+					}
+					else
+					{
+						set_partial_code(frequency2[1],zero);
+						break;
+					}
+
+				}
+				case 1:
+				{
+					set_partial_code(frequency2[1],one);
+					break;
+				}
+				case 2:
+				{
+					set_partial_code(frequency2[1],two);
+					break;
+				}
+				case 3:
+				{
+					set_partial_code(frequency2[1],three);
+					break;
+				}
+				case 4:
+				{
+					set_partial_code(frequency2[1],four);
+					break;
+				}
+				case 5:
+				{
+					set_partial_code(frequency2[1],five);
+					break;
+				}
+				case 6:
+				{
+					set_partial_code(frequency2[1],six);
+					break;
+				}
+				case 7:
+				{
+					set_partial_code(frequency2[1],seven);
+					break;
+				}
+				case 8:
+				{
+					set_partial_code(frequency2[1],eight);
+					break;
+				}
+				case 9:
+				{
+					set_partial_code(frequency2[1],nine);
+					break;
+				}
+
+				default:
+				{
+					set_partial_code(frequency2[1],blank);
+					break;
+				}
+
 			}
 
-		}
-		if(channel == 1)
-		{
-			updateChannel_1();
-		}
+			switch(waveFreq[2])
+			{
+				case 0:
+				{
+					if(waveFreq[1] == 0 && waveFreq[0] == 0)
+					{
+						set_partial_code(frequency2[2],blank);
+						break;
+					}
 
-		if(channel == 2)
-		{
-			updateChannel_2();
+					set_partial_code(frequency2[2],zero);
+					break;
+				}
+				case 1:
+				{
+					set_partial_code(frequency2[2],one);
+					break;
+				}
+				case 2:
+				{
+					set_partial_code(frequency2[2],two);
+					break;
+				}
+				case 3:
+				{
+					set_partial_code(frequency2[2],three);
+					break;
+				}
+				case 4:
+				{
+					set_partial_code(frequency2[2],four);
+					break;
+				}
+				case 5:
+				{
+					set_partial_code(frequency2[2],five);
+					break;
+				}
+				case 6:
+				{
+					set_partial_code(frequency2[2],six);
+					break;
+				}
+				case 7:
+				{
+					set_partial_code(frequency2[2],seven);
+					break;
+				}
+				case 8:
+				{
+					set_partial_code(frequency2[2],eight);
+					break;
+				}
+				case 9:
+				{
+					set_partial_code(frequency2[2],nine);
+					break;
+				}
+
+				default:
+				{
+					set_partial_code(frequency2[2],blank);
+					break;
+				}
+
+			}
+
+
+			switch(waveFreq[3])
+			{
+				case 0:
+				{
+					set_partial_code(frequency2[3],zero);
+					break;
+				}
+				case 1:
+				{
+					set_partial_code(frequency2[3],one);
+					break;
+				}
+				case 2:
+				{
+					set_partial_code(frequency2[3],two);
+					break;
+				}
+				case 3:
+				{
+					set_partial_code(frequency2[3],three);
+					break;
+				}
+				case 4:
+				{
+					set_partial_code(frequency2[3],four);
+					break;
+				}
+				case 5:
+				{
+					set_partial_code(frequency2[3],five);
+					break;
+				}
+				case 6:
+				{
+					set_partial_code(frequency2[3],six);
+					break;
+				}
+				case 7:
+				{
+					set_partial_code(frequency2[3],seven);
+					break;
+				}
+				case 8:
+				{
+					set_partial_code(frequency2[3],eight);
+					break;
+				}
+				case 9:
+				{
+					set_partial_code(frequency2[3],nine);
+					break;
+				}
+
+				default:
+				{
+					set_partial_code(frequency2[3],blank);
+					break;
+				}
+
+			}
+
 		}
 	}
 
-	else if (storedValues.F != dValue.F && startUpF == false)
+	if((storedValues.A1 != dValue.A1) || (storedValues.A2 != dValue.A2))
 	{
-		storedValues.F = dValue.F;
-
-		waveFreq[0] = (storedValues.F - (storedValues.F%1000)) / 1000;
-		waveFreq[1] = (storedValues.F%1000 - storedValues.F%100) /100;
-		waveFreq[2] = (((storedValues.F%1000)%100) - (storedValues.F%10)) /10;
-		waveFreq[3] = (((storedValues.F%1000)%100)%10);
-
-		switch(waveFreq[0])
+		if((storedValues.A1 != dValue.A1))
 		{
-			case 0:
-			{
-				set_partial_code(blank,0);
-				break;
-			}
-			case 1:
-			{
-				set_partial_code(one,0);
-				break;
-			}
+			uint32_t tempAmp = 0;
+			storedValues.A1 = dValue.A1;
 
-			default:
-			{
-				set_partial_code(blank,0);
-				break;
-			}
+			tempAmp = (storedValues.A1 * 10)/1240;
 
-		}
+			waveAmp[0] = (tempAmp - (tempAmp%10)) / 10;
+			waveAmp[1] = (tempAmp%10);
 
-		switch(waveFreq[1])
-		{
-			case 0:
+
+			set_partial_code(amplitude1[1],decimal);
+			switch(waveAmp[0])
 			{
-				if(waveFreq[0] == 0)
+				case 0:
 				{
-					set_partial_code(blank,1);
-					break;
-				}
-				else
-				{
-					set_partial_code(zero,1);
+					set_partial_code(amplitude1[0],zero);
 					break;
 				}
 
-			}
-			case 1:
-			{
-
-				set_partial_code(one,1);
-				break;
-			}
-			case 2:
-			{
-
-				set_partial_code(two,1);
-				break;
-			}
-			case 3:
-			{
-
-				set_partial_code(three,1);
-				break;
-			}
-			case 4:
-			{
-
-				set_partial_code(four,1);
-				break;
-			}
-			case 5:
-			{
-
-				set_partial_code(five,1);
-				break;
-			}
-			case 6:
-			{
-
-				set_partial_code(six,1);
-				break;
-			}
-			case 7:
-			{
-
-				set_partial_code(seven,1);
-				break;
-			}
-			case 8:
-			{
-
-				set_partial_code(eight,1);
-				break;
-			}
-			case 9:
-			{
-
-				set_partial_code(nine,1);
-				break;
-			}
-
-			default:
-			{
-				set_partial_code(blank,1);
-				break;
-			}
-
-		}
-
-		switch(waveFreq[2])
-		{
-			case 0:
-			{
-				if(waveFreq[1] == 0 && waveFreq[0] == 0)
+				case 1:
 				{
-					set_partial_code(blank,2);
+					set_partial_code(amplitude1[0],one);
 					break;
 				}
 
-				set_partial_code(zero,2);
-				break;
-			}
-			case 1:
-			{
-				set_partial_code(one,2);
-				break;
-			}
-			case 2:
-			{
-				set_partial_code(two,2);
-				break;
-			}
-			case 3:
-			{
-				set_partial_code(three,2);
-				break;
-			}
-			case 4:
-			{
-				set_partial_code(four,2);
-				break;
-			}
-			case 5:
-			{
-				set_partial_code(five,2);
-				break;
-			}
-			case 6:
-			{
-				set_partial_code(six,2);
-				break;
-			}
-			case 7:
-			{
-				set_partial_code(seven,2);
-				break;
-			}
-			case 8:
-			{
-				set_partial_code(eight,2);
-				break;
-			}
-			case 9:
-			{
-				set_partial_code(nine,2);
-				break;
-			}
-
-			default:
-			{
-				set_partial_code(blank,2);
-				break;
-			}
-
-		}
-
-
-		switch(waveFreq[3])
-		{
-			case 0:
-			{
-				set_partial_code(zero,3);
-				break;
-			}
-			case 1:
-			{
-				set_partial_code(one,3);
-				break;
-			}
-			case 2:
-			{
-				set_partial_code(two,3);
-				break;
-			}
-			case 3:
-			{
-				set_partial_code(three,3);
-				break;
-			}
-			case 4:
-			{
-				set_partial_code(four,3);
-				break;
-			}
-			case 5:
-			{
-				set_partial_code(five,3);
-				break;
-			}
-			case 6:
-			{
-				set_partial_code(six,3);
-				break;
-			}
-			case 7:
-			{
-				set_partial_code(seven,3);
-				break;
-			}
-			case 8:
-			{
-				set_partial_code(eight,3);
-				break;
-			}
-			case 9:
-			{
-				set_partial_code(nine,3);
-				break;
-			}
-
-			default:
-			{
-				set_partial_code(blank,3);
-				break;
-			}
-
-		}
-		startUpF = true;
-
-		if(channel == 1)
-		{
-			updateChannel_1();
-		}
-
-		if(channel == 2)
-		{
-			updateChannel_2();
-		}
-
-	}
-
-	else
-	{
-		switch(waveFreq[0])
-		{
-			case 0:
-			{
-				set_partial_code(blank,0);
-				break;
-			}
-			case 1:
-			{
-				set_partial_code(one,0);
-				break;
-			}
-
-			default:
-			{
-				set_partial_code(blank,0);
-				break;
-			}
-
-		}
-
-		switch(waveFreq[1])
-		{
-			case 0:
-			{
-				if(waveFreq[0] == 0)
+				case 2:
 				{
-					set_partial_code(blank,1);
-					break;
-				}
-				else
-				{
-					set_partial_code(zero,1);
+					set_partial_code(amplitude1[0],two);
 					break;
 				}
 
-			}
-			case 1:
-			{
-
-				set_partial_code(one,1);
-				break;
-			}
-			case 2:
-			{
-
-				set_partial_code(two,1);
-				break;
-			}
-			case 3:
-			{
-
-				set_partial_code(three,1);
-				break;
-			}
-			case 4:
-			{
-
-				set_partial_code(four,1);
-				break;
-			}
-			case 5:
-			{
-
-				set_partial_code(five,1);
-				break;
-			}
-			case 6:
-			{
-
-				set_partial_code(six,1);
-				break;
-			}
-			case 7:
-			{
-
-				set_partial_code(seven,1);
-				break;
-			}
-			case 8:
-			{
-
-				set_partial_code(eight,1);
-				break;
-			}
-			case 9:
-			{
-
-				set_partial_code(nine,1);
-				break;
-			}
-
-			default:
-			{
-				set_partial_code(blank,1);
-				break;
-			}
-
-		}
-
-		switch(waveFreq[2])
-		{
-			case 0:
-			{
-				if(waveFreq[1] == 0 && waveFreq[0] == 0)
+				case 3:
 				{
-					set_partial_code(blank,2);
+					set_partial_code(amplitude1[0],three);
 					break;
 				}
 
-				set_partial_code(zero,2);
-				break;
-			}
-			case 1:
-			{
-				set_partial_code(one,2);
-				break;
-			}
-			case 2:
-			{
-				set_partial_code(two,2);
-				break;
-			}
-			case 3:
-			{
-				set_partial_code(three,2);
-				break;
-			}
-			case 4:
-			{
-				set_partial_code(four,2);
-				break;
-			}
-			case 5:
-			{
-				set_partial_code(five,2);
-				break;
-			}
-			case 6:
-			{
-				set_partial_code(six,2);
-				break;
-			}
-			case 7:
-			{
-				set_partial_code(seven,2);
-				break;
-			}
-			case 8:
-			{
-				set_partial_code(eight,2);
-				break;
-			}
-			case 9:
-			{
-				set_partial_code(nine,2);
-				break;
-			}
-
-			default:
-			{
-				set_partial_code(blank,2);
-				break;
-			}
-
-		}
-
-
-		switch(waveFreq[3])
-		{
-			case 0:
-			{
-				set_partial_code(zero,3);
-				break;
-			}
-			case 1:
-			{
-				set_partial_code(one,3);
-				break;
-			}
-			case 2:
-			{
-				set_partial_code(two,3);
-				break;
-			}
-			case 3:
-			{
-				set_partial_code(three,3);
-				break;
-			}
-			case 4:
-			{
-				set_partial_code(four,3);
-				break;
-			}
-			case 5:
-			{
-				set_partial_code(five,3);
-				break;
-			}
-			case 6:
-			{
-				set_partial_code(six,3);
-				break;
-			}
-			case 7:
-			{
-				set_partial_code(seven,3);
-				break;
-			}
-			case 8:
-			{
-				set_partial_code(eight,3);
-				break;
-			}
-			case 9:
-			{
-				set_partial_code(nine,3);
-				break;
-			}
-
-			default:
-			{
-				set_partial_code(blank,3);
-				break;
-			}
-
-		}
-		startUpF = true;
-
-		if(channel == 1)
-		{
-			updateChannel_1();
-		}
-
-		if(channel == 2)
-		{
-			updateChannel_2();
-		}
-
-
-	}
-
-	if((storedValues.type != dValue.type || storedValues.offset != dValue.offset)&& startUpW == true)
-	{
-		storedValues.type = dValue.type;
-		switch(storedValues.type)
-		{
-			case sine:
-			{
-				set_partial_code(SINE1,4);
-				set_partial_code(SINE2,5);
-				break;
-			}
-			case square:
-			{
-				set_partial_code(SQUARE,4);
-				set_partial_code(SQUARE,5);
-				break;
-			}
-			case pulse:
-			{
-				set_partial_code(PULSE,4);
-				set_partial_code(PULSE,5);
-				break;
-			}
-			case delay:
-			{
-				set_partial_code(D,4);
-				switch(dValue.offset)
+				default:
 				{
-					case 1:
-						set_partial_code(one,5);
-						break;
-					case 2:
-						set_partial_code(two,5);
-						break;
-					case 3:
-						set_partial_code(three,5);
-						break;
-					case 4:
-						set_partial_code(four,5);
-						break;
-					case 5:
-						set_partial_code(five,5);
-						break;
-					case 6:
-						set_partial_code(six,5);
-						break;
-					case 7:
-						set_partial_code(seven,5);
-						break;
-					default:
-						set_partial_code(blank,5);
-						break;
+					set_partial_code(amplitude1[0],zero);
+					break;
+
 				}
-				break;
 			}
-			default:
-				break;
-		}
-		if(channel == 1)
-		{
-			updateChannel_1();
-		}
 
-		if(channel == 2)
-		{
-			updateChannel_2();
-		}
-	}
-	else if((storedValues.type != dValue.type || storedValues.offset != dValue.offset) && startUpW == false)
-	{
+			switch(waveAmp[1])
+			{
 
-		storedValues.type = dValue.type;
-		switch(storedValues.type)
-		{
-			case sine:
-			{
-				set_partial_code(SINE1,4);
-				set_partial_code(SINE2,5);
-				break;
-			}
-			case square:
-			{
-				set_partial_code(SQUARE,4);
-				set_partial_code(SQUARE,5);
-				break;
-			}
-			case pulse:
-			{
-				set_partial_code(PULSE,4);
-				set_partial_code(PULSE,5);
-				break;
-			}
-			case delay:
-			{
-				set_partial_code(D,4);
-				switch(dValue.offset)
+				case 0:
 				{
-					case 1:
-						set_partial_code(one,5);
-						break;
-					case 2:
-						set_partial_code(two,5);
-						break;
-					case 3:
-						set_partial_code(three,5);
-						break;
-					case 4:
-						set_partial_code(four,5);
-						break;
-					case 5:
-						set_partial_code(five,5);
-						break;
-					case 6:
-						set_partial_code(six,5);
-						break;
-					case 7:
-						set_partial_code(seven,5);
-						break;
-					default:
-						set_partial_code(blank,5);
-						break;
+					set_partial_code(amplitude1[2],zero);
+					break;
 				}
-				break;
+
+				case 1:
+				{
+					set_partial_code(amplitude1[2],one);
+					break;
+				}
+
+				case 2:
+				{
+					set_partial_code(amplitude1[2],two);
+					break;
+				}
+
+				case 3:
+				{
+					set_partial_code(amplitude1[2],three);
+					break;
+				}
+
+				case 4:
+				{
+					set_partial_code(amplitude1[2],four);
+					break;
+				}
+
+				case 5:
+				{
+					set_partial_code(amplitude1[2],five);
+					break;
+				}
+
+				case 6:
+				{
+					set_partial_code(amplitude1[2],six);
+					break;
+				}
+
+				case 7:
+				{
+					set_partial_code(amplitude1[2],seven);
+					break;
+				}
+
+				case 8:
+				{
+					set_partial_code(amplitude1[2],eight);
+					break;
+				}
+
+				case 9:
+				{
+					set_partial_code(amplitude1[2],nine);
+					break;
+				}
+
+				default:
+				{
+					set_partial_code(amplitude1[2],zero);
+					break;
+
+				}
 			}
-			default:
-				break;
-		}
-		startUpW = true;
-
-		if(channel == 1)
-		{
-			updateChannel_1();
 		}
 
-		if(channel == 2)
+		if((storedValues.A2 != dValue.A2))
 		{
-			updateChannel_2();
+			uint32_t tempAmp = 0;
+			storedValues.A2 = dValue.A2;
+
+			tempAmp = (storedValues.A2 * 10)/1240;
+
+			waveAmp[0] = (tempAmp - (tempAmp%10)) / 10;
+			waveAmp[1] = (tempAmp%10);
+
+			set_partial_code(amplitude2[1],decimal);
+
+			switch(waveAmp[0])
+			{
+				case 0:
+				{
+					set_partial_code(amplitude2[0],zero);
+					break;
+				}
+
+				case 1:
+				{
+					set_partial_code(amplitude2[0],one);
+					break;
+				}
+
+				case 2:
+				{
+					set_partial_code(amplitude2[0],two);
+					break;
+				}
+
+				case 3:
+				{
+					set_partial_code(amplitude2[0],three);
+					break;
+				}
+
+				default:
+				{
+					set_partial_code(amplitude2[0],zero);
+					break;
+
+				}
+			}
+
+			switch(waveAmp[1])
+			{
+
+				case 0:
+				{
+					set_partial_code(amplitude2[2],zero);
+					break;
+				}
+
+				case 1:
+				{
+					set_partial_code(amplitude2[2],one);
+					break;
+				}
+
+				case 2:
+				{
+					set_partial_code(amplitude2[2],two);
+					break;
+				}
+
+				case 3:
+				{
+					set_partial_code(amplitude2[2],three);
+					break;
+				}
+
+				case 4:
+				{
+					set_partial_code(amplitude2[2],four);
+					break;
+				}
+
+				case 5:
+				{
+					set_partial_code(amplitude2[2],five);
+					break;
+				}
+
+				case 6:
+				{
+					set_partial_code(amplitude2[2],six);
+					break;
+				}
+
+				case 7:
+				{
+					set_partial_code(amplitude2[2],seven);
+					break;
+				}
+
+				case 8:
+				{
+					set_partial_code(amplitude2[2],eight);
+					break;
+				}
+
+				case 9:
+				{
+					set_partial_code(amplitude2[2],nine);
+					break;
+				}
+
+				default:
+				{
+					set_partial_code(amplitude2[2],zero);
+					break;
+
+				}
+			}
 		}
 
 	}
 
-	else
+	if(((storedValues.type1 != dValue.type1) || (storedValues.type2 != dValue.type2) || (storedValues.offset != dValue.offset)))
 	{
-		switch(storedValues.type)
+
+		if(storedValues.type1 != dValue.type1)
 		{
-			case sine:
+			storedValues.type1 = dValue.type1;
+			switch(storedValues.type1)
 			{
-				set_partial_code(SINE1,4);
-				set_partial_code(SINE2,5);
-				break;
-			}
-			case square:
-			{
-				set_partial_code(SQUARE,4);
-				set_partial_code(SQUARE,5);
-				break;
-			}
-			case pulse:
-			{
-				set_partial_code(PULSE,4);
-				set_partial_code(PULSE,5);
-				break;
-			}
-			case delay:
-			{
-				set_partial_code(D,4);
-				switch(dValue.offset)
+				case sine:
 				{
-					case 1:
-						set_partial_code(one,5);
-						break;
-					case 2:
-						set_partial_code(two,5);
-						break;
-					case 3:
-						set_partial_code(three,5);
-						break;
-					case 4:
-						set_partial_code(four,5);
-						break;
-					case 5:
-						set_partial_code(five,5);
-						break;
-					case 6:
-						set_partial_code(six,5);
-						break;
-					case 7:
-						set_partial_code(seven,5);
-						break;
-					default:
-						set_partial_code(blank,5);
-						break;
+					set_partial_code(shape1[0],SINE1);
+					set_partial_code(shape1[1],SINE2);
+					break;
 				}
-				break;
+				case square:
+				{
+					set_partial_code(shape1[0],SQUARE);
+					set_partial_code(shape1[1],SQUARE);
+					break;
+				}
+				case pulse:
+				{
+					set_partial_code(shape1[0],PULSE);
+					set_partial_code(shape1[1],PULSE);
+					break;
+				}
+				default:
+					break;
 			}
-			default:
-				break;
-		}
-		startUpW = true;
-
-		if(channel == 1)
-		{
-			updateChannel_1();
 		}
 
-		if(channel == 2)
+		if((storedValues.type2 != dValue.type2) || (storedValues.offset != dValue.offset))
 		{
-			updateChannel_2();
+
+			storedValues.type2 = dValue.type2;
+			storedValues.offset = dValue.offset;
+			switch(storedValues.type2)
+			{
+				case sine:
+				{
+					set_partial_code(shape2[0],SINE1);
+					set_partial_code(shape2[1],SINE2);
+					break;
+				}
+				case square:
+				{
+					set_partial_code(shape2[0],SQUARE);
+					set_partial_code(shape2[1],SQUARE);
+					break;
+				}
+				case pulse:
+				{
+					set_partial_code(shape2[0],PULSE);
+					set_partial_code(shape2[1],PULSE);
+					break;
+				}
+				case delay:
+				{
+					set_partial_code(shape2[0],D);
+					switch(storedValues.offset)
+					{
+						case 0:
+							set_partial_code(shape2[1],zero);
+							break;
+						case 1:
+							set_partial_code(shape2[1],one);
+							break;
+						case 2:
+							set_partial_code(shape2[1],two);
+							break;
+						case 3:
+							set_partial_code(shape2[1],three);
+							break;
+						case 4:
+							set_partial_code(shape2[1],four);
+							break;
+						case 5:
+							set_partial_code(shape2[1],five);
+							break;
+						case 6:
+							set_partial_code(shape2[1],six);
+							break;
+						case 7:
+							set_partial_code(shape2[1],seven);
+							break;
+						default:
+							set_partial_code(shape2[1],blank);
+							break;
+					}
+					break;
+				}
+				default:
+					break;
+			}
 		}
 
 
 	}
+	if(channel == 1)
+	{
+		updateChannel_1();
+		return;
+	}
 
-	return;
-
+	if(channel == 2)
+	{
+		updateChannel_2();
+		return;
+	}
 }
 
 
@@ -1163,7 +1079,11 @@ void OLED::send_command(uint8_t command)
 	LL_GPIO_ResetOutputPin(SSD1306_DC_GPIO_Port, SSD1306_DC_Pin);
 	LL_SPI_TransmitData8(SPI1, command);
 	while(LL_SPI_IsActiveFlag_TXE(SPI1)==0);
-
+	//While loop has verifiable bounds at 0.2 us
+	//This number was achieved by the following
+	// 40 Mbit/s and sending 8 bits
+	// thus 40,000,000 / 8 = 5,000,000 per second
+	// thus 1 / 5,000,000 = 0.000002 secs for the loop to terminate
 	return;
 }
 
@@ -1173,10 +1093,13 @@ void OLED::send_data(uint8_t* data)
 
 	for(uint32_t i = 0; i < CHARACTER_SIZE; i++)
 	{
-
 		LL_SPI_TransmitData8(SPI1, data[i]);
 		while(LL_SPI_IsActiveFlag_TXE(SPI1)==0);
-
+		//While loop has verifiable bounds at 0.2 us
+		//This number was achieved by the following
+		// 40 Mbit/s and sending 8 bits
+		// thus 40,000,000 / 8 = 5,000,000 per second
+		// thus 1 / 5,000,000 = 0.000002 secs for the loop to terminate
 	}
 	return;
 
@@ -1197,6 +1120,7 @@ void OLED::SSD1306_init()
 		SPI_CS_count = 1;
 	}
 
+	assert(SPI_CS_count == 1);
 
     send_command(SSD1306_COMMAND_DISPLAY_OFF); //set display off
 
@@ -1275,6 +1199,7 @@ void OLED::clear_display()
 	{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
 	};
 
+	assert(clear[0][0] == 0);
 
 	for(int32_t i = 0; i < 8; i++)
 	{
@@ -1287,61 +1212,3 @@ void OLED::clear_display()
 	}
 	return;
 }
-
-void OLED::clearChannel_1()
-{
-	set_column_address(61,68);
-	set_page_address(2,3);
-	send_data(blank);
-
-	set_column_address(70,77);
-	set_page_address(2,3);
-	send_data(blank);
-
-	set_column_address(79,86);
-	set_page_address(2,3);
-	send_data(blank);
-
-	set_column_address(88,95);
-	set_page_address(2,3);
-	send_data(blank);
-
-	set_column_address(112,119);
-	set_page_address(2,3);
-	send_data(blank);
-
-	set_column_address(120,127);
-	set_page_address(2,3);
-	send_data(blank);
-	return;
-}
-
-void OLED::clearChannel_2()
-{
-	set_column_address(61,68);
-	set_page_address(6,7);
-	send_data(blank);
-
-	set_column_address(70,77);
-	set_page_address(6,7);
-	send_data(blank);
-
-	set_column_address(79,86);
-	set_page_address(6,7);
-	send_data(blank);
-
-	set_column_address(88,95);
-	set_page_address(6,7);
-	send_data(blank);
-
-	set_column_address(112,119);
-	set_page_address(6,7);
-	send_data(blank);
-
-	set_column_address(120,127);
-	set_page_address(6,7);
-	send_data(blank);
-
-	return;
-}
-

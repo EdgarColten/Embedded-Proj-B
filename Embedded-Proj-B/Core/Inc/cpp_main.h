@@ -16,18 +16,31 @@
 typedef enum waveType {sine,square,pulse,delay}wave;
 
 typedef struct{
-	uint32_t F;
-	wave type;
+	uint32_t F1;
+	uint32_t A1;
+	wave type1;
+
+	uint32_t F2;
+	uint32_t A2;
+	wave type2;
+
 	uint8_t channel;
 	uint8_t offset;
 } displayValues;
 
 typedef struct{ //passed to the outputDriver for data collected by the input
-	uint32_t frequency;
-	uint32_t amplitude;
+	uint32_t frequency1;
+	uint32_t amplitude1;
+	wave type1;
+
+	uint32_t frequency2;
+	uint32_t amplitude2;
+
 	uint32_t delay;
-	wave type;
+	wave type2;
+
 	uint8_t channel;
+
 }waveProp;
 
 typedef struct{

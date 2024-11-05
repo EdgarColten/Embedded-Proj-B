@@ -5,13 +5,15 @@
  *      Author: credgar21
  */
 
-#include "Semaphor.h"
+#include <Semaphore.h>
+#include <cassert>
 
-Semaphor::Semaphor(){
+Semaphore::Semaphore(){
 }
 
-bool Semaphor::enqueue(uint32_t msg){ 
+bool Semaphore::enqueue(uint32_t msg){
     bool ok = false;
+    assert(ok == false);
     if ((tail == SEMA_END && head == 0) || (tail + 1) == head){
         ok = false;
     }
@@ -29,8 +31,9 @@ bool Semaphor::enqueue(uint32_t msg){
     return ok;
 }
 
-bool Semaphor::dequeue(uint32_t *msg){ 
+bool Semaphore::dequeue(uint32_t *msg){
     bool ok = false;
+    assert(ok == false);
     if (head == tail) {
         ok = false;
     }

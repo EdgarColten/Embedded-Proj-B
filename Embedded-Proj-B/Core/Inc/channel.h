@@ -15,21 +15,31 @@
 
 #include "cpp_main.h"
 
-class Channel{
+class Channel{ // @suppress("Miss copy constructor or assignment operator")
 	inputQueue *Input_q;
 	waveQueue *Wave_q;
+
+	waveProp previousValues;
 	waveProp myWaveProp;
-	uint8_t shapeCount;
-	uint8_t freqCount;
-	uint8_t ampCount;
+
+	uint8_t shapeCount1;
+	uint8_t freqCount1;
+	uint8_t ampCount1;
+
+	uint8_t shapeCount2;
+	uint8_t freqCount2;
+	uint8_t ampCount2;
+
 	uint8_t delayCount;
 	uint8_t chanCount;
+	nextState ns;
+
 public:
 	Channel(inputQueue*, waveQueue*);
-	void setWaveType(int8_t);
-	void setFreq(int8_t);
-	void setAmp(int8_t);
-	void setDelay(int8_t);
+	void setWaveType();
+	void setFreq();
+	void setAmp();
+	void setDelay();
 	void updateChannel();
 //	void cpChannel(waveProp);
 };
