@@ -13,15 +13,15 @@
 class inputDriver { // @suppress("Miss copy constructor or assignment operator")
 private:
     int8_t cState;
-    uint8_t peState;
+    uint32_t peState;
 public:
     GPIO_TypeDef* gpio_addressA;
     GPIO_TypeDef* gpio_addressB;
     //nextState* queue; this will be fixed once we add struct
-    int8_t pinNumA;
-    int8_t pinNumB;
+    uint32_t pinNumA;
+    uint32_t pinNumB;
     //Functions
-    inputDriver(GPIO_TypeDef* , GPIO_TypeDef* ,uint8_t,uint8_t);
+    inputDriver(GPIO_TypeDef* , GPIO_TypeDef* ,uint32_t,uint32_t);
     int8_t edgeDetector();
 };
 

@@ -6,6 +6,8 @@
  */
 #include <cstdint>
 #include <stdio.h>
+#include <cassert>
+
 #include "main.h"
 #include "Queue.h"
 
@@ -17,6 +19,7 @@ Queue::Queue(){
 
 bool Queue::enqueue(uint32_t msg){ //works with the tail
     bool ok = false;
+    assert(ok == false);
     if ((tail == BUFF_END && head == 0) || (tail + 1) == head){ //This means that the buffer will be "empty" and we will be unable to dequeue
         ok = false;
     }
@@ -36,6 +39,7 @@ bool Queue::enqueue(uint32_t msg){ //works with the tail
 
 bool Queue::dequeue(uint32_t *msg){ //works with the head
     bool ok = false;
+    assert(ok == false);
     if (head == tail) {
         ok = false;
     }

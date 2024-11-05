@@ -16,10 +16,10 @@ class inputBtn { // @suppress("Miss copy constructor or assignment operator")
     uint8_t pstate = 0;
     int8_t msg = 0;
 public:
-    int8_t pinNum;
+    uint32_t pinNum;
     GPIO_TypeDef* gpio_address;
     //Functions
-    inputBtn(GPIO_TypeDef* , uint8_t);
+    inputBtn(GPIO_TypeDef* , uint32_t);
     int8_t stateMachine();
 };
 

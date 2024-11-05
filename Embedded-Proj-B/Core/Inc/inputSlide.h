@@ -12,11 +12,11 @@
 #include "stm32l4xx_hal.h"
 class inputSlide { // @suppress("Miss copy constructor or assignment operator")
 public:
-    int8_t pinNum;
+	uint32_t pinNum;
     GPIO_TypeDef* gpio_address;
     uint8_t rValue;
-	inputSlide(GPIO_TypeDef*,uint8_t);
-	uint8_t slideGet();
+	inputSlide(GPIO_TypeDef*,uint32_t);
+	int8_t slideGet();
 
 };
 

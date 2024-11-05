@@ -9,13 +9,14 @@
  * Level 1:
  *  -Rule 1: Stick to language definition (ISO 11 for C and C++) DONE (show settings to display)
  *  -Rule 2: -WALL DONE (show settings to display)
+ * Level 2:
+ *  -Rule 6: use IPC to communicate between tasks DONE
  * Level 3:
- * 	-Rule 16: The use of Assertions. TODO
- * 	-Rule :
+ * 	-Rule 16: The use of Assertions. DONE look at any function over 10 lines
  * Level 4:
- * 	-Rule 21: Macros shall not be #define'd within a function or a block. TODO (display by using ctrl + f and looking up #define)
- * 	-Rule 22: #undef shall not be used. TODO (display by using ctrl + f and looking up #undef)
- * 	-Rule 31: #include directives in a file shall only be preceded by other preprocessor directives or comments. TODO
+ * 	-Rule 21: Macros shall not be #define'd within a function or a block. DONE (display by using ctrl + f and looking up #define)
+ * 	-Rule 22: #undef shall not be used. DONE (display by using ctrl + f and looking up #undef)
+ * 	-Rule 31: #include directives in a file shall only be preceded by other preprocessor directives or comments. DONE
  */
 
 #include <cstdint>
@@ -47,120 +48,239 @@ extern TIM_HandleTypeDef htim6;
 
 //TESTING FOR cpp_main();
 /*
-	displayQueue OLED_Queue1;
-	displayQueue OLED_Queue2;
+	inputQueue inputC;
 
-	waveQueue waveQueue1;
-	waveQueue waveQueue2;
+	displayQueue OLED_Queue;
 
-	OutputDriver Channel1 = OutputDriver(1,&waveQueue1,&OLED_Queue1);
-	OutputDriver Channel2 = OutputDriver(2,&waveQueue2,&OLED_Queue2);
+	waveQueue waveQueue;
 
-	OLED display1 = OLED(1,&OLED_Queue1);
-	OLED display2 = OLED(2,&OLED_Queue2);
+	Channel channel = Channel(&inputC,&waveQueue);
 
-	waveProp signal1;
-	signal1.amplitude = 4000;
-	signal1.frequency = 100;
-	signal1.type = sine;
-	signal1.delay = 0;
+	OutputDriver Signal = OutputDriver(&waveQueue,&OLED_Queue);
 
-	waveProp signal2;
-	signal2.amplitude = 2045;
-	signal2.frequency = 830;
-	signal2.type = delay;
-	signal2.delay = 7;
+	OLED display = OLED(&OLED_Queue);
 
-	waveQueue1.enqueue(signal1);
-	waveQueue2.enqueue(signal2);
+	nextState ns;
+	ns.sw_select = 1; //channel 1
+    ns.knobA = 1; //amplitude = 0.2
+    ns.knobF = 0; //frequency = 50 Hz
+    ns.knobD = 0;
+    ns.btn_S = 1;
+//	waveProp signal;
+//	signal.amplitude1 = 4095;
+//	signal.frequency1 = 1000;
+//	signal.type1 = square;
+//
+//	signal.amplitude2 = 2045;
+//	signal.frequency2 = 900;
+//	signal.type2 = sine;
+//	signal.delay = 0;
+//
+//	signal.channel = 1;
+//	waveQueue.enqueue(signal);
 
-	Channel1.update_Channel(Channel1);
-	Channel2.update_Channel(Channel1);
+//    inputC.enqueue(ns);
 
-	display1.updateDisplay();
-	display2.updateDisplay();
+    channel.updateChannel();
+
+	Signal.update_Channel();
+
+	display.updateDisplay();
+
+	uint32_t count_1ms = ONE_S;
+	uint32_t count_5ms = 5;
+	uint32_t count_10ms = 2;
+
+	while(1)
+	{
+		if(count_1ms == 0)
+		{
+			count_5ms--;
+			if(count_5ms != 0)
+			{
+				ns.knobF = 1;
+				ns.knobA = 0; //amplitude = 0.2
+
+			    inputC.enqueue(ns);
+
+			    channel.updateChannel();
+
+				Signal.update_Channel();
+
+				display.updateDisplay();
+
+				count_1ms = ONE_S;
+			}
+			count_1ms = ONE_S;
+		}
+
+		if(count_5ms == 0)
+		{
+			count_10ms--;
+
+			if(count_10ms != 0)
+			{
+				ns.knobF = -1;
+
+			    inputC.enqueue(ns);
+
+			    channel.updateChannel();
+
+				Signal.update_Channel();
+
+				display.updateDisplay();
+
+			}
+			count_5ms = 5;
+
+		}
+
+		if(count_10ms == 0)
+		{
+			if(ns.sw_select == 1)
+				ns.sw_select = 2;
+			else
+				ns.sw_select = 1;
+
+			ns.knobA = 1;
+
+		    inputC.enqueue(ns);
+
+		    channel.updateChannel();
+
+			Signal.update_Channel();
+
+			display.updateDisplay();
+
+			count_10ms = 2;
+
+		}
+
+
+		count_1ms--;
+	}
 
 */
 
 
-OutputDriver::OutputDriver(uint8_t chan, waveQueue* wQ, displayQueue* dQ) // @suppress("Class members should be properly initialized")
+OutputDriver::OutputDriver(waveQueue* wQ, displayQueue* dQ) // @suppress("Class members should be properly initialized")
 {
 	oledQueue = dQ;
 	signalQueue = wQ;
-	freq = 1;
-	amp = 1;
+	freq1 = 100;
+	amp1 = 2048;
+	shape1 = sine;
+	autoReload1 = 2731;
+
+	oldFreq1 = freq1;
+	oldAmp1 = amp1;
+	oldShape1 = shape1;
+
+	freq2 = 100;
+	amp2 = 2048;
+	shape2 = sine;
+	autoReload2 = 2731;
 	offset = 0;
-	shape = sine;
-	autoReload = 2731;
-	channel = chan;
+
+	oldFreq2 = freq2;
+	oldAmp2 = amp2;
+	oldShape2 = shape2;
+
+	channel = 1;
+
+	assert(channel == 1);
+
+	calculateAutoReload1();
+	setAutoReload(&htim2,1);
+	generateWave(1);
+
+	calculateAutoReload2();
+	setAutoReload(&htim6,2);
+	generateWave(2);
+
+	HAL_TIM_Base_Start(&htim2);
+	HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave1, SIZE, DAC_ALIGN_12B_R);
+
+	HAL_TIM_Base_Start(&htim6);
+	HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave2, SIZE, DAC_ALIGN_12B_R);
+
+	pack();
+	oledQueue->enqueue(dValues);
 }
 
+void OutputDriver::resetCounter(TIM_HandleTypeDef* timer,uint8_t chan)
+{
+	(timer)->Instance->CNT = 0;
+}
 
 //setting the Auto Reload value
-void OutputDriver::setAutoReload(TIM_HandleTypeDef* timer)
+void OutputDriver::setAutoReload(TIM_HandleTypeDef* timer,uint8_t chan)
 {
+	if(chan == 1)
+	{
+		assert(chan == 1);
+	    (timer)->Instance->ARR = (autoReload1);
+	    (timer)->Init.Period = (autoReload1);
+		return;
+	}
+	if(chan == 2)
+	{
+	    (timer)->Instance->ARR = (autoReload2);
+	    (timer)->Init.Period = (autoReload2);
+		return;
+	}
 
-	//TODO: improve tests and assertions
-    (timer)->Instance->ARR = (autoReload);
-    (timer)->Init.Period = (autoReload);
+}
+
+void OutputDriver::setAttributes1(waveProp signal)
+{
+	shape1 = signal.type1;
+	freq1 = signal.frequency1;
+	amp1 = signal.amplitude1;
 	return;
 }
 
-void OutputDriver::setAttributes(waveProp signal)
+void OutputDriver::setAttributes2(waveProp signal)
 {
-	//TODO: improve tests and assertions
-	assert(signal.amplitude > 0);
-	assert(signal.frequency > 0);
-
-	shape = signal.type;
-	freq = signal.frequency;
-	amp = signal.amplitude;
-
+	shape2 = signal.type2;
+	freq2 = signal.frequency2;
+	amp2 = signal.amplitude2;
 	return;
 }
 
-void OutputDriver::calculateAutoReload() //Period of the signal
+void OutputDriver::calculateAutoReload1() //Period of the signal //TODO: add an assert
 {
-	uint32_t trig = 0;
-	trig = freq * (SIZE);
-	autoReload = ((CPU_CLK/trig) - 1); //TODO:find a way to avoid division
+	uint32_t trig1 = 0;
+	trig1 = freq1 * (SIZE);
+	autoReload1 = ((CPU_CLK/trig1) - 1); //TODO:find a way to avoid division
 	return;
 }
 
-void OutputDriver::getAttributes(waveProp* dataPoll)
+void OutputDriver::calculateAutoReload2() //Period of the signal //TODO: add an assert
 {
-
-
-	dataPoll->amplitude = amp;
-	dataPoll->frequency = freq;
-	dataPoll->type = shape;
-	assert(dataPoll != nullptr);
-
+	uint32_t trig2 = 0;
+	trig2 = freq2 * (SIZE) * (4 + 1);
+	autoReload2 = ((CPU_CLK/trig2) - 1); //TODO:find a way to avoid division
 	return;
 }
 
-void OutputDriver::update_Channel(OutputDriver channel1) //TODO: take out struct and just use queue attribute
+void OutputDriver::update_Channel()
 {
 	waveProp signal;
-
-	//sanity check
-	//assert(signalQueue != nullptr);
-
 	bool notEmpty = signalQueue->dequeue(&signal);
 	//checking that there are values to dequeue
 
 	if(notEmpty == false)
 		return;
 
+	channel = signal.channel;
 
 	////////////////////Testing dequeued value//////////////////////
-	if((signal.frequency > 0 && signal.frequency <= 1000) && (signal.amplitude > 0 && signal.amplitude < 4096) && (signal.type >= 0 && signal.type < 4) && (signal.delay >= 0 && signal.delay < 8))
+	if((signal.frequency1 > 0 && signal.frequency1 <= 1000) && (signal.amplitude1 > 0 && signal.amplitude1 < 4033) && (signal.type1 >= 0 && signal.type1 < 3) && (signal.delay >= 0 && signal.delay < 8))
 	{
-		//LL_GPIO_SetOutputPin(Signal_Pass_LED_GPIO_Port, Signal_Pass_LED_Pin);
 		GPIOB->ODR |= (1 << 5);// PB_5
 		GPIOB->ODR &= ~(1 << 4); //PB_4
 	}
-
 	else
 	{
 		GPIOB->ODR |= (1 << 4); //PB_4
@@ -169,121 +289,129 @@ void OutputDriver::update_Channel(OutputDriver channel1) //TODO: take out struct
 		return;
 	}
 	////////////////////Testing dequeued value//////////////////////
+	setAttributes1(signal);
+	setAttributes2(signal);
 
-
-	if((freq != signal.frequency || amp != signal.amplitude || shape != signal.type) && signal.type != delay)
+	if(freq1 != oldFreq1 || amp1 != oldAmp1 || shape1 != oldShape1)
 	{
-		if(channel == 1)
-		{
-			setAttributes(signal);
-			calculateAutoReload();
+		oldFreq1 = freq1;
+		oldAmp1 = amp1;
+		oldShape1 = shape1;
 
-			setAutoReload(&htim2);
-			generateWave();
+		calculateAutoReload1();
 
-			HAL_TIM_Base_Start(&htim2);
-			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave, SIZE, DAC_ALIGN_12B_R);
+		setAutoReload(&htim2,1);
+		generateWave(1);
 
-			//assert(oledQueue != nullptr);
-
-			pack();
-			oledQueue->enqueue(dValues);
-
-			return;
-		}
-
-		else if(channel == 2)
-		{
-
-			setAttributes(signal);
-			calculateAutoReload();
-
-			setAutoReload(&htim6);
-			generateWave();
-
-			HAL_TIM_Base_Start(&htim6);
-			HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
-
-			//assert(oledQueue != nullptr);
-
-			pack();
-			oledQueue->enqueue(dValues);
-
-
-			return;
-		}
+		resetCounter(&htim2,1);
 	}
 
-	else if(signal.type == delay)
+
+	if((freq2 != oldFreq2 || amp2 != oldAmp2 || shape2 != oldShape2) && shape2 != delay)
 	{
-		waveProp data; //local
-		channel1.getAttributes(&data);
 
-		if(freq != data.frequency || amp != data.amplitude || shape != data.type || offset != signal.delay)
-		{
+		oldFreq2 = freq2;
+		oldAmp2 = amp2;
+		oldShape2 = shape2;
 
-			offset = signal.delay;
-			waveType shapeHold = signal.type;
 
-			setAttributes(data);
+		calculateAutoReload2();
 
-			calculateAutoReload();
-			setAutoReload(&htim6);
-			generateWave();
+		setAutoReload(&htim6,2);
+		generateWave(2);
 
-			HAL_DAC_Stop_DMA(&hdac1, DAC1_CHANNEL_2);
-			HAL_DAC_Stop_DMA(&hdac1, DAC1_CHANNEL_1);
-
-			HAL_TIM_Base_Start(&htim6);
-			HAL_TIM_Base_Start(&htim2);
-
-			if(offset == 0)
-			{
-				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave, SIZE, DAC_ALIGN_12B_R);
-				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave, SIZE, DAC_ALIGN_12B_R);
-			}
-			else if(offset > 0 && offset < 8)
-			{
-				delaySet();
-				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave, SIZE, DAC_ALIGN_12B_R);
-				HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, delayOutWave, SIZE, DAC_ALIGN_12B_R);
-				shape = shapeHold;
-			}
-
-			pack();
-			oledQueue->enqueue(dValues);
-			assert(oledQueue != nullptr);
-			return;
-		}
-
-		else
-			return;
+		resetCounter(&htim6,2);
 	}
 
-	else
-		return;
+
+	if(shape2 == delay && oldShape2 != delay)
+	{
+
+		oldShape2 = delay;
+		offset = signal.delay;
+		generateWave(1);
+
+
+		setAutoReload(&htim6,1);
+		delaySet();
+
+
+		resetCounter(&htim6,2);
+		resetCounter(&htim2,1);
+
+		HAL_DAC_Stop_DMA(&hdac1, DAC1_CHANNEL_1);
+		HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave1, SIZE, DAC_ALIGN_12B_R);
+
+		HAL_DAC_Stop_DMA(&hdac1, DAC1_CHANNEL_2);
+		HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave2, SIZE, DAC_ALIGN_12B_R);
+	}
+
+	else if(shape2 == delay && oldShape2 == delay)
+	{
+		offset = signal.delay;
+
+		delaySet();
+
+		resetCounter(&htim6,2);
+		resetCounter(&htim2,1);
+
+	}
+
+	if(offset != signal.delay && shape2 == delay)
+		delaySet();
+
+	if(shape1 == shape2 && oldShape1 != oldShape2)
+	{
+		oldShape1 = shape1;
+		oldShape2 = shape2;
+
+		resetCounter(&htim6,2);
+		resetCounter(&htim2,1);
+
+		HAL_DAC_Stop_DMA(&hdac1, DAC1_CHANNEL_2);
+		HAL_DAC_Stop_DMA(&hdac1, DAC1_CHANNEL_1);
+
+		HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_1, outWave1, SIZE, DAC_ALIGN_12B_R);
+		HAL_DAC_Start_DMA(&hdac1, DAC1_CHANNEL_2, outWave2, SIZE, DAC_ALIGN_12B_R);
+
+	}
+
+
+	pack();
+	oledQueue->enqueue(dValues);
+	assert(oledQueue != nullptr);
+	return;
+
+
 }
 
 void OutputDriver::pack()
 {
-	dValues.F = freq;
-	dValues.type = shape;
+	dValues.F1 = freq1;
+	dValues.A1 = amp1;
+	dValues.type1 = shape1;
+
+	dValues.F2 = freq2;
+	dValues.A2 = amp2;
+	dValues.type2 = shape2;
+
 	dValues.channel = channel;
+	dValues.offset = offset;
 }
 
 void OutputDriver::delaySet()
 {
 	uint32_t shift = offset * PHASE_SHIFT;
-	//assert(shift >= 0);
+	assert(shift < SIZE);
 
 	Queue shiftedWave;
 
 	////////////////////Testing outWave value//////////////////////
 	for(uint32_t i = 0; i < SIZE; i++)
 	{
-		shiftedWave.enqueue(outWave[i]);
-		//assert(shiftedWave.enqueue(outWave[i]) == true);
-		if(outWave[i] >= 0 && outWave[i] < 4095)
+		shiftedWave.enqueue(outWave1[i]);
+
+		if(outWave1[i] >= 0 && outWave1[i] < 4095)
 		{
 			GPIOB->ODR |= (1 << 3); //PB_3
 		}
@@ -298,67 +426,49 @@ void OutputDriver::delaySet()
 	{
 		uint32_t hold = 0;
 		shiftedWave.dequeue(&hold);
-		//assert(hold > -1);
 		shiftedWave.enqueue(hold);
 	}
 
 	for(uint32_t i = 0; i < SIZE; i++)
 	{
-		//uint32_t holdNewValue = 0;
-		shiftedWave.dequeue(&delayOutWave[i]);
-
-		//assert(shiftedWave.dequeue(&delayOutWave[i]) == true);
+		shiftedWave.dequeue(&outWave2[i]);
 	}
-
 	return;
 }
 
 //Wave generation
-void OutputDriver::generateWave()
+void OutputDriver::generateWave(uint8_t chan)
 {
-	if(shape == sine)
+	assert((chan > 0) && (chan < 3));
+	if(chan == 1)
 	{
-		for(uint32_t i = 0; i < SIZE; i++)
-		{
-			outWave[i] =  ((sin(i*(2*PI)/SIZE) + 1) * (amp/2)); //TODO:find a way to avoid division
-		}
+		if(shape1 == sine)
+			for(uint32_t i = 0; i < 255; i++)
+				outWave1[i] = (amp1 * sineWave[i])/3971;
+
+		else if(shape1 == square)
+			for(uint32_t i = 0; i < SIZE; i++)
+				outWave1[i] = (amp1 * squareWave[i])/MAX_SIZE;
+
+		else if(shape1 == pulse)
+			for(uint32_t i = 0; i < SIZE; i++)
+				outWave1[i] = (amp1 * pulseWave[i])/MAX_SIZE;
 		return;
 	}
 
-	else if(shape == square)
+	if(chan == 2)
 	{
-		for(uint32_t i = 0; i < SIZE; i++)
-		{
-			if(i < SIZE/2) //TODO:find a way to avoid division
-			{
-				outWave[i] = 0;
-			}
-			else
-			{
-				outWave[i] = amp; //1215 = 1 volt
-				if(outWave[i] > (MAX_SIZE - 1))
-				{
-					outWave[i] = (MAX_SIZE - 1);
-				}
-			}
+		if(shape2 == sine)
+			for(uint32_t i = 0; i < SIZE; i++)
+				outWave2[i] = (amp2 * sineWave[i])/3971;
 
-		}
+		else if(shape2 == square)
+			for(uint32_t i = 0; i < SIZE; i++)
+				outWave2[i] = (amp2 * squareWave[i])/MAX_SIZE;
 
-		return;
-	}
-
-	else if(shape == pulse)
-	{
-		for(uint32_t i = 0; i < SIZE; i++)
-		{
-			if(i < 25) //TODO:find a way to avoid division
-			{
-				outWave[i] = amp; //1215 = 1 volt
-			}
-			else
-				outWave[i] = 0;
-		}
-
+		else if(shape2 == pulse)
+			for(uint32_t i = 0; i < SIZE; i++)
+				outWave2[i] = (amp2 * pulseWave[i])/MAX_SIZE;
 		return;
 	}
 
