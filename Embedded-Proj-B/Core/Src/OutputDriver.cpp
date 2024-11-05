@@ -277,21 +277,21 @@ void OutputDriver::update_Channel()
 		return;
 
 	channel = signal.channel;
-//
-//	////////////////////Testing dequeued value//////////////////////
-//	if((signal.frequency1 > 0 && signal.frequency1 <= 1000) && (signal.amplitude1 > 0 && signal.amplitude1 < 4033) && (signal.type1 >= 0 && signal.type1 < 3) && (signal.delay >= 0 && signal.delay < 8))
-//	{
-//		GPIOB->ODR |= (1 << 5);// PB_5
-//		GPIOB->ODR &= ~(1 << 4); //PB_4
-//	}
-//	else
-//	{
-//		GPIOB->ODR |= (1 << 4); //PB_4
-//		GPIOB->ODR &= ~(1 << 5);// PB_5
-//
-//		return;
-//	}
-//	////////////////////Testing dequeued value//////////////////////
+
+	////////////////////Testing dequeued value//////////////////////
+	if((signal.frequency1 > 0 && signal.frequency1 <= 1000) && (signal.amplitude1 > 0 && signal.amplitude1 < 4033) && (signal.type1 >= 0 && signal.type1 < 3) && (signal.delay >= 0 && signal.delay < 8))
+	{
+		GPIOB->ODR |= (1 << 5);// PB_5
+		GPIOB->ODR &= ~(1 << 4); //PB_4
+	}
+	else
+	{
+		GPIOB->ODR |= (1 << 4); //PB_4
+		GPIOB->ODR &= ~(1 << 5);// PB_5
+
+		return;
+	}
+	////////////////////Testing dequeued value//////////////////////
 	setAttributes1(signal);
 	setAttributes2(signal);
 

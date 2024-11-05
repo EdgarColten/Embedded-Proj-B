@@ -1078,12 +1078,9 @@ void OLED::send_command(uint8_t command)
 {
 	LL_GPIO_ResetOutputPin(SSD1306_DC_GPIO_Port, SSD1306_DC_Pin);
 	LL_SPI_TransmitData8(SPI1, command);
-	while(LL_SPI_IsActiveFlag_TXE(SPI1)==0);
-	//While loop has verifiable bounds at 0.2 us
-	//This number was achieved by the following
-	// 40 Mbit/s and sending 8 bits
-	// thus 40,000,000 / 8 = 5,000,000 per second
-	// thus 1 / 5,000,000 = 0.000002 secs for the loop to terminate
+	for(uint32_t i = 0; i < MAXDELAY; i++)
+			if(LL_SPI_IsActiveFlag_TXE(SPI1))
+				break;
 	return;
 }
 
@@ -1094,12 +1091,9 @@ void OLED::send_data(uint8_t* data)
 	for(uint32_t i = 0; i < CHARACTER_SIZE; i++)
 	{
 		LL_SPI_TransmitData8(SPI1, data[i]);
-		while(LL_SPI_IsActiveFlag_TXE(SPI1)==0);
-		//While loop has verifiable bounds at 0.2 us
-		//This number was achieved by the following
-		// 40 Mbit/s and sending 8 bits
-		// thus 40,000,000 / 8 = 5,000,000 per second
-		// thus 1 / 5,000,000 = 0.000002 secs for the loop to terminate
+		for(uint32_t i = 0; i < MAXDELAY; i++)
+				if(LL_SPI_IsActiveFlag_TXE(SPI1))
+					break;
 	}
 	return;
 
