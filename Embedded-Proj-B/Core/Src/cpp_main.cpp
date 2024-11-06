@@ -13,14 +13,34 @@
 //
 // Current Timer config:
 // tim2 enabled
-// Prescalar = 0
-// Auto Reload = 2731 (100 Hz)
+// Prescalar = 4
+// Auto Reload = 2731
 //
 // tim6 enabled
-// Prescalar = 0
-// Auto Reload = 2731 (100 Hz)
+// Prescalar = 4
+// Auto Reload = 2731
 //
+// SPI config:
+// PB_7	= DC
+// PA_1	= CLK
+// PA_3	= RES
+// PA_6	= CS
+// PA_7	= MOSI
+
+// GPIO Ouput:
+// PB_5 = Red LED
+// PB_4 = Green LED
 //
+// GPIO Input:
+// PA_12 = Freq knob pin A
+// PB_0 = Freq knob pin B
+// PB_7 = Amp knob pin A
+// PB_6 = Amp knob pin B
+// PB_1 = Delay knob pin A
+// PA_11 = Delay knob pin B
+// PA_10 = Shape Button
+// PA_9 = Channel select switch
+
 //
 ///////////////////////////////////////////////////////////////////
 
